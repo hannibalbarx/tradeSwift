@@ -56,7 +56,7 @@ def data(path, label_path=None):
                 label.readline()  # we don't need the headers
             continue
         # parse x
-	row = line.rstrip().split(',')
+        row = line.rstrip().split(',')
         for m, feat in enumerate(row):
             if m == 0:
                 ID = int(feat)
@@ -69,12 +69,12 @@ def data(path, label_path=None):
                 #       i.e., same value won't always have the same hash
                 #       on different machines
                 x[m] = abs(hash(str(m) + '_' + feat)) % D
-	tw = 146
-	for i in xrange(10):
-		for j in xrange(i+1,10):
-			tw += 1
-			x[tw] = abs(hash(row[hash_cols[i]]+"_x_"+row[hash_cols[j]])) % D
-			
+        tw = 146
+        for i in xrange(10):
+                for j in xrange(i+1,10):
+                        tw += 1
+                        x[tw] = abs(hash(row[hash_cols[i]]+"_x_"+row[hash_cols[j]])) % D
+
         # parse y, if provided
         if label_path:
             # use float() to prevent future type casting, [1:] to ignore id
