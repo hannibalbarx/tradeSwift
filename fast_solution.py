@@ -31,6 +31,7 @@ test = 'test.csv'  # path to testing file
 
 D = 2 ** 18  # number of weights use for each model, we have 32 of them
 alpha = .1   # learning rate for sgd optimization
+hash_cols = [3,4,34,35,61,64,65,91,94,95]
 
 
 # function, generator definitions ############################################
@@ -49,13 +50,14 @@ def data(path, label_path=None):
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
-            x = [0] * 146
+            x = [0] * (146 + 46)
             if label_path:
                 label = open(label_path)
                 label.readline()  # we don't need the headers
             continue
         # parse x
-        for m, feat in enumerate(line.rstrip().split(',')):
+	row = line.rstrip().split(',')
+        for m, feat in enumerate(row):
             if m == 0:
                 ID = int(feat)
             else:
@@ -67,6 +69,12 @@ def data(path, label_path=None):
                 #       i.e., same value won't always have the same hash
                 #       on different machines
                 x[m] = abs(hash(str(m) + '_' + feat)) % D
+	tw = 146
+	for i in xrange(10):
+		for j in xrange(i+1,10):
+			tw += 1
+			x[tw] = abs(hash(row[hash_cols[i]]+"_x_"+row[hash_cols[j]])) % D
+			
         # parse y, if provided
         if label_path:
             # use float() to prevent future type casting, [1:] to ignore id
