@@ -70,8 +70,8 @@ def data(path, label_path=None):
                 #       on different machines
                 x[m] = abs(hash(str(m) + '_' + feat)) % D
         tw = 146
-        for i in xrange(10):
-                for j in xrange(i+1,10):
+        for i in range(10):
+                for j in range(i+1,10):
                         tw += 1
                         x[tw] = abs(hash(row[hash_cols[i]]+"_x_"+row[hash_cols[j]])) % D
 
