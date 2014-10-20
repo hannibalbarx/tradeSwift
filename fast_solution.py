@@ -32,7 +32,7 @@ test = 'test.csv'  # path to testing file
 D = 2 ** 18  # number of weights use for each model, we have 32 of them
 alpha = .1   # learning rate for sgd optimization
 hash_cols = [3,4,34,35,61,64,65,91,94,95]
-
+v={"YES":1, "NO":0}
 
 # function, generator definitions ############################################
 
@@ -50,7 +50,7 @@ def data(path, label_path=None):
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
-            x = [0] * (146 + 45 + 2)
+            x = [0] * (146 + 45+2+2)
             if label_path:
                 label = open(label_path)
                 label.readline()  # we don't need the headers
@@ -78,6 +78,10 @@ def data(path, label_path=None):
         x[tw] = abs(hash(row[34]+"_x_"+row[35]+"_x_"+row[61])) % D
         tw += 1
         x[tw] = abs(hash(row[64]+"_x_"+row[65]+"_x_"+row[91])) % D
+        tw += 1
+        x[tw] = abs(hash(row[10]+row[11]+row[12]+row[13]+row[14])) % D
+        tw += 1
+        x[tw] = abs(hash(row[24]+row[25]+row[26])) % D
 
         # parse y, if provided
         if label_path:
@@ -144,7 +148,9 @@ n = [[0.] * D if k != 13 else None for k in range(33)]
 loss = 0.
 loss_y14 = log(1. - 10**-15)
 
-for ID, x, y in data(train, label):
+while (True):
+ loss=0.
+ for ID, x, y in data(train, label):
 
     # get predictions and train on all labels
     for k in K:
