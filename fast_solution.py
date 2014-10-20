@@ -50,7 +50,7 @@ def data(path, label_path=None):
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
-            x = [0] * (146 + 46)
+            x = [0] * (146 + 45 + 2)
             if label_path:
                 label = open(label_path)
                 label.readline()  # we don't need the headers
@@ -69,11 +69,15 @@ def data(path, label_path=None):
                 #       i.e., same value won't always have the same hash
                 #       on different machines
                 x[m] = abs(hash(str(m) + '_' + feat)) % D
-        tw = 146
+        tw = 145
         for i in range(10):
                 for j in range(i+1,10):
                         tw += 1
                         x[tw] = abs(hash(row[hash_cols[i]]+"_x_"+row[hash_cols[j]])) % D
+        tw += 1
+        x[tw] = abs(hash(row[34]+"_x_"+row[35]+"_x_"+row[61])) % D
+        tw += 1
+        x[tw] = abs(hash(row[64]+"_x_"+row[65]+"_x_"+row[91])) % D
 
         # parse y, if provided
         if label_path:
