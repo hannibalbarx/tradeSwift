@@ -39,14 +39,18 @@ test = parser.get('config', 'test_file')
 D = 2 ** parser.getint('config', 'D_exponent')  # number of weights use for each model, we have 32 of them
 alpha = .1   # learning rate for sgd optimization
 
-hash_cols=list(int(x) for x in parser.get('config', 'hash_cols').split(",")) if parser.has_option('config', 'hash_cols') else []
-deep_hash_cols=list(int(x) for x in parser.get('config', 'deep_hash_cols').split(",")) if parser.has_option('config', 'deep_hash_cols') else []
-hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'hash_joins').split(";"))) if parser.has_option('config', 'hash_joins') else []
-features_count = 146 + (len(hash_cols)*(len(hash_cols)-1)/2 if hash_cols else 0)+ (len(deep_hash_cols)*(len(deep_hash_cols)-1)/2 if deep_hash_cols else 0)+len(hash_joins)
+features_count = 146
+deep_hash_joins=[]
+hash_joins=[]
+if parser.has_option('config', 'deep_hash_joins'):
+	deep_hash_joins=list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'deep_hash_joins').split(";")))
+	features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins)
+if parser.has_option('config', 'hash_joins'):
+	hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'hash_joins').split(";")))
+	features_count +=len(hash_joins)
 
 print "D_exponent = %s"%parser.get('config', 'D_exponent')
-if parser.has_option('config', 'hash_cols'): print "hash_cols = %s"%parser.get('config', 'hash_cols')
-if parser.has_option('config', 'deep_hash_cols'): print "deep_hash_cols = %s"%parser.get('config', 'deep_hash_cols')
+if parser.has_option('config', 'deep_hash_joins'): print "deep_hash_joins = %s"%parser.get('config', 'deep_hash_joins')
 if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get('config', 'hash_joins')
 print 'features count = %s'%features_count
 
@@ -86,16 +90,12 @@ def data(path, label_path=None):
                 #       on different machines
                 x[m] = abs(hash(str(m) + '_' + feat)) % D
         tw = 145
-	if hash_cols:
-		for i in range(len(hash_cols)-1):
-			for j in range(i+1,len(hash_cols)):
-				tw += 1
-                                x[tw] = abs(hash(str(tw)+"_"+row[hash_cols[i]]+"_x_"+row[hash_cols[j]])) % D
-	if deep_hash_cols:
-		for i in range(len(deep_hash_cols)-1):
-			for j in range(i+1,len(deep_hash_cols)):
-				tw += 1
-                                x[tw] = abs(hash(str(tw)+"_"+row[deep_hash_cols[i]]+"_x_"+row[deep_hash_cols[j]])) % D
+	if deep_hash_joins:			
+		for i in range(len(deep_hash_joins)):
+			for j in range(len(deep_hash_joins[i])-1):
+				for k in range(j+1, len(deep_hash_joins[i])):
+					tw += 1
+					x[tw] = abs(hash(str(tw)+"_"+row[deep_hash_joins[i][j]]+"_x_"+row[deep_hash_joins[i][k]])) % D
 	if hash_joins:			
 		for i in range(len(hash_joins)):
 			join_str=""
