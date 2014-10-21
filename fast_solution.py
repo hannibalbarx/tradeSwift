@@ -43,6 +43,11 @@ hash_cols=list(int(x) for x in parser.get('config', 'hash_cols').split(",")) if 
 deep_hash_cols=list(int(x) for x in parser.get('config', 'deep_hash_cols').split(",")) if parser.has_option('config', 'deep_hash_cols') else []
 hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'hash_joins').split(";"))) if parser.has_option('config', 'hash_joins') else []
 features_count = 146 + (len(hash_cols)*(len(hash_cols)-1)/2 if hash_cols else 0)+ (len(deep_hash_cols)*(len(deep_hash_cols)-1)/2 if deep_hash_cols else 0)+len(hash_joins)
+
+print "D_exponent = %s"%parser.get('config', 'D_exponent')
+if parser.has_option('config', 'hash_cols'): print "hash_cols = %s"%parser.get('config', 'hash_cols')
+if parser.has_option('config', 'deep_hash_cols'): print "deep_hash_cols = %s"%parser.get('config', 'deep_hash_cols')
+if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get('config', 'hash_joins')
 print 'features count = %s'%features_count
 
 # function, generator definitions ############################################
