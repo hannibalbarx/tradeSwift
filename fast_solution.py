@@ -18,6 +18,13 @@ as the name is changed.
 from datetime import datetime
 from math import log, exp, sqrt
 
+from ConfigParser import SafeConfigParser
+
+parser = SafeConfigParser()
+parser.read('config.ini')
+if parser.getboolean('config', 'exit'):
+	print 'why you no love me? bye.'
+	exit()
 
 # TL; DR
 # the main learning process start at line 122
@@ -25,14 +32,14 @@ from math import log, exp, sqrt
 
 # parameters #################################################################
 
-train = 'train.csv'  # path to training file
-label = 'trainLabels.csv'  # path to label file of training data
-test = 'test.csv'  # path to testing file
+train = parser.get('config', 'train_file_1')
+label = parser.get('config', 'train_labels')
+test = parser.get('config', 'test_file')
 
-D = 2 ** 18  # number of weights use for each model, we have 32 of them
+D = 2 ** parser.getint('config', 'D_exponent')  # number of weights use for each model, we have 32 of them
 alpha = .1   # learning rate for sgd optimization
-hash_cols = [3,4,34,35,61,64,65,91,94,95]
-v={"YES":1, "NO":0}
+hash_cols = list(int(x) for x in parser.get('config', 'hash_cols').split(","))
+hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'hash_joins').split(";")))
 
 # function, generator definitions ############################################
 
@@ -50,7 +57,7 @@ def data(path, label_path=None):
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
-            x = [0] * (146 + 45+2+2)
+            x = [0] * (146 + len(hash_cols)*(len(hash_cols)-1)/2+len(hash_joins))
             if label_path:
                 label = open(label_path)
                 label.readline()  # we don't need the headers
@@ -70,18 +77,16 @@ def data(path, label_path=None):
                 #       on different machines
                 x[m] = abs(hash(str(m) + '_' + feat)) % D
         tw = 145
-        for i in range(10):
+        for i in range(9):
                 for j in range(i+1,10):
                         tw += 1
                         x[tw] = abs(hash(row[hash_cols[i]]+"_x_"+row[hash_cols[j]])) % D
-        tw += 1
-        x[tw] = abs(hash(row[34]+"_x_"+row[35]+"_x_"+row[61])) % D
-        tw += 1
-        x[tw] = abs(hash(row[64]+"_x_"+row[65]+"_x_"+row[91])) % D
-        tw += 1
-        x[tw] = abs(hash(row[10]+row[11]+row[12]+row[13]+row[14])) % D
-        tw += 1
-        x[tw] = abs(hash(row[24]+row[25]+row[26])) % D
+	for i in range(len(hash_joins)):
+		join_str=""
+		for j in range(len(hash_joins[i])):
+			join_str+=row[hash_joins[i][j]]
+		tw += 1
+		x[tw] = abs(hash(join_str)) % D
 
         # parse y, if provided
         if label_path:
@@ -148,9 +153,7 @@ n = [[0.] * D if k != 13 else None for k in range(33)]
 loss = 0.
 loss_y14 = log(1. - 10**-15)
 
-while (True):
- loss=0.
- for ID, x, y in data(train, label):
+for ID, x, y in data(train, label):
 
     # get predictions and train on all labels
     for k in K:
