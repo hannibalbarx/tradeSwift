@@ -34,7 +34,6 @@ if parser.getboolean('config', 'exit'):
 
 train = parser.get('config', 'train_file_1')
 label = parser.get('config', 'train_labels')
-test = parser.get('config', 'test_file')
 
 D = 2 ** parser.getint('config', 'D_exponent')  # number of weights use for each model, we have 32 of them
 alpha = .1   # learning rate for sgd optimization
@@ -70,7 +69,8 @@ def data(path, label_path=None):
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
-            x = [0] * (features_count)
+            ID=0
+	    x = [0] * (features_count)
             if label_path:
                 label = open(label_path)
                 label.readline()  # we don't need the headers
@@ -79,7 +79,7 @@ def data(path, label_path=None):
         row = line.rstrip().split(',')
         for m, feat in enumerate(row):
             if m == 0:
-                ID = int(feat)
+                ID+= 1
             else:
                 # one-hot encode everything with hash trick
                 # categorical: one-hotted
@@ -170,6 +170,8 @@ n = [[0.] * D if k != 13 else None for k in range(33)]
 loss = 0.
 loss_y14 = log(1. - 10**-15)
 
+print 'training...'
+ID=0
 for ID, x, y in data(train, label):
 
     # get predictions and train on all labels
@@ -181,16 +183,31 @@ for ID, x, y in data(train, label):
 
     # print out progress, so that we know everything is working
     if ID % 100000 == 0:
-        print('%s\tencountered: %d\tcurrent logloss: %f' % (
+        print('%s\tencountered: %d\tlogloss: %f' % (
             datetime.now(), ID, (loss/33.)/ID))
 
-with open('./submission1234.csv', 'w') as outfile:
-    outfile.write('id_label,pred\n')
-    for ID, x in data(test):
-        for k in K:
-            p = predict(x, w[k])
-            outfile.write('%s_y%d,%s\n' % (ID, k+1, str(p)))
-            if k == 12:
-                outfile.write('%s_y14,0.0\n' % ID)
+if parser.has_option('config', 'validation_file'):
+	print 'validation...'
+	loss = 0.
+	ID=0
+	for ID, x, y in data(parser.get('config', 'validation_file'), parser.get('config', 'validation_labels')):
+	    for k in K:
+		p = predict(x, w[k])
+		loss += logloss(p, y[k])
+	    loss += loss_y14
+	if (ID):
+		print('%s\tencountered: %d\t logloss: %f' % (
+		    datetime.now(), ID, (loss/33.)/ID))
+
+if parser.has_option('config', 'test_file'):
+	print 'testing...'
+	with open('./sontag.csv', 'w') as outfile:
+	    outfile.write('id_label,pred\n')
+	    for ID, x in data(parser.get('config', 'test_file')):
+		for k in K:
+		    p = predict(x, w[k])
+		    outfile.write('%s_y%d,%s\n' % (ID, k+1, str(p)))
+		    if k == 12:
+			outfile.write('%s_y14,0.0\n' % ID)
 
 print('Done, elapsed time: %s' % str(datetime.now() - start))
