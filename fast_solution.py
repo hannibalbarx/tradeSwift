@@ -18,6 +18,9 @@ as the name is changed.
 from datetime import datetime
 from math import log, exp, sqrt
 
+from sklearn.utils import murmurhash3_32
+
+import cPickle
 from ConfigParser import SafeConfigParser
 
 parser = SafeConfigParser()
@@ -88,14 +91,14 @@ def data(path, label_path=None):
                 # note, the build in hash(), although fast is not stable,
                 #       i.e., same value won't always have the same hash
                 #       on different machines
-                x[m] = abs(hash(str(m) + '_' + feat)) % D
+                x[m] = abs(murmurhash3_32(str(m) + '_' + feat)) % D
         tw = 145
 	if deep_hash_joins:			
 		for i in range(len(deep_hash_joins)):
 			for j in range(len(deep_hash_joins[i])-1):
 				for k in range(j+1, len(deep_hash_joins[i])):
 					tw += 1
-					x[tw] = abs(hash(str(tw)+"_"+row[deep_hash_joins[i][j]]+"_x_"+row[deep_hash_joins[i][k]])) % D
+					x[tw] = abs(murmurhash3_32(str(tw)+"_"+row[deep_hash_joins[i][j]]+"_x_"+row[deep_hash_joins[i][k]])) % D
 	if hash_joins:			
 		for i in range(len(hash_joins)):
 			join_str=""
@@ -103,7 +106,7 @@ def data(path, label_path=None):
 				join_str+=row[hash_joins[i][j]]+"_x_"
 			join_str+=row[hash_joins[i][-1]]
 			tw += 1
-                        x[tw] = abs(hash(str(tw)+"_"+join_str)) % D
+                        x[tw] = abs(murmurhash3_32(str(tw)+"_"+join_str)) % D
 
         # parse y, if provided
         if label_path:
@@ -173,8 +176,6 @@ loss_y14 = log(1. - 10**-15)
 print 'training...'
 ID=0
 for ID, x, y in data(train, label):
-
-    # get predictions and train on all labels
     for k in K:
         p = predict(x, w[k])
         update(alpha, w[k], n[k], x, p, y[k])
@@ -185,6 +186,7 @@ for ID, x, y in data(train, label):
     if ID % 100000 == 0:
         print('%s\tencountered: %d\tlogloss: %f' % (
             datetime.now(), ID, (loss/33.)/ID))
+cPickle.dump(w, open("weights.pickle","w"))
 
 if parser.has_option('config', 'validation_file'):
 	print 'validation...'
@@ -196,7 +198,7 @@ if parser.has_option('config', 'validation_file'):
 		loss += logloss(p, y[k])
 	    loss += loss_y14
 	if (ID):
-		print('%s\tencountered: %d\t logloss: %f' % (
+		print('%s\tencountered: %d\tlogloss: %f' % (
 		    datetime.now(), ID, (loss/33.)/ID))
 
 if parser.has_option('config', 'test_file'):
