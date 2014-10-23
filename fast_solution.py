@@ -18,7 +18,6 @@ as the name is changed.
 from datetime import datetime
 from math import log, exp, sqrt
 
-import cPickle
 from ConfigParser import SafeConfigParser
 
 parser = SafeConfigParser()
@@ -36,7 +35,7 @@ if parser.getboolean('config', 'exit'):
 train = parser.get('config', 'train_file_1')
 label = parser.get('config', 'train_labels')
 
-D = 2 ** parser.getint('config', 'D_exponent')  # number of weights use for each model, we have 32 of them
+D = parser.getint('config', 'D')  # number of weights use for each model, we have 32 of them
 alpha = .1   # learning rate for sgd optimization
 
 features_count = 146
@@ -49,7 +48,7 @@ if parser.has_option('config', 'hash_joins'):
 	hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'hash_joins').split(";")))
 	features_count +=len(hash_joins)
 
-print "D_exponent = %s"%parser.get('config', 'D_exponent')
+print "D= %s"%parser.get('config', 'D')
 if parser.has_option('config', 'deep_hash_joins'): print "deep_hash_joins = %s"%parser.get('config', 'deep_hash_joins')
 if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get('config', 'hash_joins')
 print 'features count = %s'%features_count
@@ -70,7 +69,6 @@ def data(path, label_path=None):
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
-            ID=0
 	    x = [0] * (features_count)
             if label_path:
                 label = open(label_path)
@@ -80,7 +78,7 @@ def data(path, label_path=None):
         row = line.rstrip().split(',')
         for m, feat in enumerate(row):
             if m == 0:
-                ID+= 1
+                ID = int(feat)
             else:
                 # one-hot encode everything with hash trick
                 # categorical: one-hotted
@@ -172,8 +170,9 @@ loss = 0.
 loss_y14 = log(1. - 10**-15)
 
 print 'training...'
-ID=0
+ID2=0
 for ID, x, y in data(train, label):
+    ID2+=1
     for k in K:
         p = predict(x, w[k])
         update(alpha, w[k], n[k], x, p, y[k])
@@ -183,20 +182,21 @@ for ID, x, y in data(train, label):
     # print out progress, so that we know everything is working
     if ID % 100000 == 0:
         print('%s\tencountered: %d\tlogloss: %f' % (
-            datetime.now(), ID, (loss/33.)/ID))
+            datetime.now(), ID2, (loss/33.)/ID2))
 
 if parser.has_option('config', 'validation_file'):
 	print 'validation...'
 	loss = 0.
-	ID=0
+	ID2=0
 	for ID, x, y in data(parser.get('config', 'validation_file'), parser.get('config', 'validation_labels')):
+	    ID2+=1
 	    for k in K:
 		p = predict(x, w[k])
 		loss += logloss(p, y[k])
 	    loss += loss_y14
-	if (ID):
+	if (ID2):
 		print('%s\tencountered: %d\tlogloss: %f' % (
-		    datetime.now(), ID, (loss/33.)/ID))
+		    datetime.now(), ID2, (loss/33.)/ID2))
 
 if parser.has_option('config', 'test_file'):
 	print 'testing...'
