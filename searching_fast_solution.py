@@ -65,12 +65,18 @@ def trainer(hash_joins):
 	del w,n
 	return loss, ID2
 
+from_col=145
+to_col=0
+if len(sys.argv)>=3:
+	from_col=int(sys.argv[1])
+	to_col=int(sys.argv[2])
+
 start = datetime.now()
-loss, ID2 = trainer(None)
-print('None,None,%f' % ((loss/33.)/ID2))
-for col1 in range(145,0,-1):
+#loss, ID2 = trainer(None)
+#print('None,None,%f' % ((loss/33.)/ID2))
+for col1 in range(from_col,to_col-1,-1):
 	for col2 in range(col1-1, -1, -1):
-		loss, ID2 = trainer([[col1, col2]])
+		loss, ID2 = 0,1#trainer([[col1, col2]])
 	 	print('%d,%d,%f' % (
 			    col1, col2, (loss/33.)/ID2))
 		sys.stdout.flush()
