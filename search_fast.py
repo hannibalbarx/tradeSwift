@@ -70,7 +70,7 @@ while True:
 	#loss, ID2 = trainer(None)
 	#print('None,None,%f' % ((loss/33.)/ID2))
 	for col2 in range(col1-1, -1, -1):
-		loss, ID2 = 0,1#trainer([[col1, col2]])
+		loss, ID2 = trainer([[col1, col2]])
 		print('%d,%d,%f' % (
 			    col1, col2, (loss/33.)/ID2))
 		sys.stdout.flush()
