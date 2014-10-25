@@ -38,8 +38,6 @@ D = parser.getint('config', 'D')  # number of weights use for each model, we hav
 alpha = .1   # learning rate for sgd optimization
 
 features_count = 146 +1
-print "D= %s"%parser.get('config', 'D')
-print 'features count = %s'%features_count
 
 def trainer(hash_joins):
 	# training and testing #######################################################
@@ -65,20 +63,17 @@ def trainer(hash_joins):
 	del w,n
 	return loss, ID2
 
-from_col=145
-to_col=0
-if len(sys.argv)>=3:
-	from_col=int(sys.argv[1])
-	to_col=int(sys.argv[2])
-
-start = datetime.now()
-#loss, ID2 = trainer(None)
-#print('None,None,%f' % ((loss/33.)/ID2))
-for col1 in range(from_col,to_col-1,-1):
+while True:
+	col1_str=raw_input()
+	col1=int(col1_str)
+	start = datetime.now()
+	#loss, ID2 = trainer(None)
+	#print('None,None,%f' % ((loss/33.)/ID2))
 	for col2 in range(col1-1, -1, -1):
 		loss, ID2 = 0,1#trainer([[col1, col2]])
-	 	print('%d,%d,%f' % (
+		print('%d,%d,%f' % (
 			    col1, col2, (loss/33.)/ID2))
 		sys.stdout.flush()
-
-print('Done, elapsed time: %s' % str(datetime.now() - start))
+	print "done"
+	sys.stdout.flush()
+#print('Done, elapsed time: %s' % str(datetime.now() - start))
