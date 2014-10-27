@@ -84,6 +84,21 @@ for ID, x, y in bag_of_hash.data(train, label, deep_hash_joins, hash_joins):
     if ID % 100000 == 0:
         print('%s\tencountered: %d\tlogloss: %f' % (
             datetime.now(), ID2, (loss/33.)/ID2))
+
+if parser.has_option('config', 'validation_file'):
+        print 'validation...'
+        loss2 = 0.
+        ID3=0
+        for ID, x, y in bag_of_hash.data(parser.get('config', 'validation_file'), parser.get('config', 'validation_labels'), deep_hash_joins, hash_joins):
+            ID3+=1
+            for k in K:
+                p = bag_of_hash.predict(x, w[k])
+                loss += bag_of_hash.logloss(p, y[k])
+            loss += loss_y14
+        if (ID3):
+                print('%s\tencountered: %d\tlogloss: %f' % (
+                    datetime.now(), ID3, (loss2/33.)/ID3))
+
 for iter in range(5):
 	for ID, x, y in bag_of_hash.data(train, label, deep_hash_joins, hash_joins):
 	    ID2+=1
@@ -98,19 +113,19 @@ for iter in range(5):
 		print('%s\tencountered: %d\tlogloss: %f' % (
 		    datetime.now(), ID2, (loss/33.)/ID2))
 
-if parser.has_option('config', 'validation_file'):
-        print 'validation...'
-        loss = 0.
-        ID2=0
-        for ID, x, y in bag_of_hash.data(parser.get('config', 'validation_file'), parser.get('config', 'validation_labels'), deep_hash_joins, hash_joins):
-            ID2+=1
-            for k in K:
-                p = bag_of_hash.predict(x, w[k])
-                loss += bag_of_hash.logloss(p, y[k])
-            loss += loss_y14
-        if (ID2):
-                print('%s\tencountered: %d\tlogloss: %f' % (
-                    datetime.now(), ID2, (loss/33.)/ID2))
+	if parser.has_option('config', 'validation_file'):
+		print 'validation...'
+		loss3 = 0.
+		ID3=0
+		for ID, x, y in bag_of_hash.data(parser.get('config', 'validation_file'), parser.get('config', 'validation_labels'), deep_hash_joins, hash_joins):
+		    ID3+=1
+		    for k in K:
+			p = bag_of_hash.predict(x, w[k])
+			loss3 += bag_of_hash.logloss(p, y[k])
+		    loss3 += loss_y14
+		if (ID3):
+			print('%s\tencountered: %d\tlogloss: %f' % (
+			    datetime.now(), ID3, (loss3/33.)/ID3))
 
 if parser.has_option('config', 'test_file'):
         print 'testing...'
