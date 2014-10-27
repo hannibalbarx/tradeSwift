@@ -14,9 +14,20 @@ as the name is changed.
  0. You just DO WHAT THE FUCK YOU WANT TO.
 '''
 
-
 from datetime import datetime
 from math import log, exp, sqrt
+
+from ConfigParser import SafeConfigParser
+parser = SafeConfigParser()
+parser.read('config.ini')
+D = parser.getint('config', 'D')  # number of weights use for each model, we have 32 of them
+
+w_max=-100.
+w_min=0.
+w_max_s=0
+w_min_s=0
+
+floats_list=[121, 122, 123, 124, 125,132,135,137,144,145]
 
 # function, generator definitions ############################################
 
@@ -28,15 +39,16 @@ from math import log, exp, sqrt
 #     ID: id of the instance (can also acts as instance count)
 #     x: a list of indices that its value is 1
 #     y: (if label_path is present) label value of y1 to y33
-def data(D, path, label_path=None, deep_hash_joins=None, hash_joins=None):
+def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
     for t, line in enumerate(open(path)):
         # initialize our generator
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
 	    features_count = 146
-	    if deep_hash_joins: features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins)
-	    if hash_joins: features_count +=len(hash_joins)
+	    if deep_hash_joins: features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins)#*2
+	    if hash_joins: features_count +=len(hash_joins)#*2
+	    if floats_list: features_count +=len(floats_list)
 	    x = [0] * (features_count)
             if label_path:
                 label = open(label_path)
@@ -44,6 +56,7 @@ def data(D, path, label_path=None, deep_hash_joins=None, hash_joins=None):
             continue
         # parse x
         row = line.rstrip().split(',')
+	floats=[]
         for m, feat in enumerate(row):
             if m == 0:
                 ID = int(feat)
@@ -55,6 +68,8 @@ def data(D, path, label_path=None, deep_hash_joins=None, hash_joins=None):
                 # note, the build in hash(), although fast is not stable,
                 #       i.e., same value won't always have the same hash
                 #       on different machines
+		if m in floats_list:
+			floats+=[float(feat)]
                 x[m] = abs(hash(str(m) + '_' + feat)) % D
         tw = 145
 	if deep_hash_joins:			
@@ -71,6 +86,10 @@ def data(D, path, label_path=None, deep_hash_joins=None, hash_joins=None):
 			join_str+=row[hash_joins[i][-1]]
 			tw += 1
                         x[tw] = abs(hash(str(tw)+"_"+join_str)) % D
+	for i in floats:
+		tw += 1
+		x[tw] = i
+		
 
         # parse y, if provided
         if label_path:
@@ -97,11 +116,14 @@ def logloss(p, y):
 # OUTPUT:
 #     probability of p(y = 1 | x; w)
 def predict(x, w):
+    global D, floats_list
     wTx = 0.
-    for i in x:  # do wTx
-        wTx += w[i] * 1.  # w[i] * x[i], but if i in x we got x[i] = 1.
-    return 1. / (1. + exp(-max(min(wTx, 20.), -20.)))  # bounded sigmoid
+    for i in range(len(x)-len(floats_list)):  # do wTx
+	wTx += w[x[i]] * 1.  # w[i] * x[i], but if i in x we got x[i] = 1.
+    for j,i in zip(range(len(floats_list)), range(len(x)-len(floats_list),len(x))):  # do wTx
+	wTx += w[j] * x[i]
 
+    return 1. / (1. + exp(-max(min(wTx, 20.), -20.)))  # bounded sigmoid
 
 # D. Update given model
 # INPUT:
@@ -116,9 +138,24 @@ def predict(x, w):
 #     w: weights
 #     n: sum of past absolute gradients
 def update(alpha, w, n, x, p, y):
-    for i in x:
+    global D,floats_list,w_max, w_min, w_min_s, w_max_s
+    for i in range(len(x)-len(floats_list)):
+        # do wTx
         # alpha / sqrt(n) is the adaptive learning rate
         # (p - y) * x[i] is the current gradient
         # note that in our case, if i in x then x[i] = 1.
-        n[i] += abs(p - y)
-        w[i] -= (p - y) * 1. * alpha / sqrt(n[i])
+	n[x[i]] += abs(p - y)
+	w[x[i]] -= (p - y) * 1. * alpha / sqrt(n[x[i]])
+	if w[x[i]]<w_min:
+		w_min=w[x[i]]
+		w_min_s = x[i]
+	if w[i]>w_max:
+		w_max=w[x[i]]
+		w_max_s=x[i]
+    for j,i in zip(range(len(floats_list)), range(len(x)-len(floats_list),len(x))):  # do wTx
+	n[j] += abs(p - y)*x[i]
+	w[j] -= (p - y) * x[i] * alpha / sqrt(n[j])
+
+def print_weights():
+	print w_max, w_max_s
+	print w_min, w_min_s
