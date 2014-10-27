@@ -84,6 +84,19 @@ for ID, x, y in bag_of_hash.data(train, label, deep_hash_joins, hash_joins):
     if ID % 100000 == 0:
         print('%s\tencountered: %d\tlogloss: %f' % (
             datetime.now(), ID2, (loss/33.)/ID2))
+for iter in range(5):
+	for ID, x, y in bag_of_hash.data(train, label, deep_hash_joins, hash_joins):
+	    ID2+=1
+	    for k in K:
+		p = bag_of_hash.predict(x, w[k])
+		bag_of_hash.update_floats(alpha, w[k], n[k], x, p, y[k])
+		loss += bag_of_hash.logloss(p, y[k])  # for progressive validation
+	    loss += loss_y14  # the loss of y14, logloss is never zero
+
+	    # print out progress, so that we know everything is working
+	    if ID % 100000 == 0:
+		print('%s\tencountered: %d\tlogloss: %f' % (
+		    datetime.now(), ID2, (loss/33.)/ID2))
 
 if parser.has_option('config', 'validation_file'):
         print 'validation...'
