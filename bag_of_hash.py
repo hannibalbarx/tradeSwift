@@ -22,11 +22,6 @@ parser = SafeConfigParser()
 parser.read('config.ini')
 D = parser.getint('config', 'D')  # number of weights use for each model, we have 32 of them
 
-w_max=-100.
-w_min=0.
-w_max_s=0
-w_min_s=0
-
 floats_list=[121, 122, 123, 124, 125,132,135,137,144,145]
 
 # function, generator definitions ############################################
@@ -68,9 +63,8 @@ def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
                 # note, the build in hash(), although fast is not stable,
                 #       i.e., same value won't always have the same hash
                 #       on different machines
-		if m in floats_list:
-			floats+=[float(feat)]
-                x[m] = abs(hash(str(m) + '_' + feat)) % D
+		if m in floats_list: floats+=[float(feat)]
+		x[m] = abs(hash(str(m) + '_' + feat)) % D
         tw = 145
 	if deep_hash_joins:			
 		for i in range(len(deep_hash_joins)):
@@ -89,14 +83,12 @@ def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
 	for i in floats:
 		tw += 1
 		x[tw] = i
-		
 
         # parse y, if provided
         if label_path:
             # use float() to prevent future type casting, [1:] to ignore id
             y = [float(y) for y in label.readline().split(',')[1:]]
         yield (ID, x, y) if label_path else (ID, x)
-
 
 # B. Bounded logloss
 # INPUT:
@@ -108,7 +100,6 @@ def logloss(p, y):
     p = max(min(p, 1. - 10e-15), 10e-15)
     return -log(p) if y == 1. else -log(1. - p)
 
-
 # C. Get probability estimation on x
 # INPUT:
 #     x: features
@@ -118,11 +109,12 @@ def logloss(p, y):
 def predict(x, w):
     global D, floats_list
     wTx = 0.
-    for i in range(len(x)-len(floats_list)):  # do wTx
-	wTx += w[x[i]] * 1.  # w[i] * x[i], but if i in x we got x[i] = 1.
-    for j,i in zip(range(len(floats_list)), range(len(x)-len(floats_list),len(x))):  # do wTx
-	wTx += w[j] * x[i]
-
+    for i in x[:len(x)-len(floats_list)]:  # do wTx
+	wTx += w[i] * 1.  # w[i] * x[i], but if i in x we got x[i] = 1.
+    d=0
+    for i in x[len(x)-len(floats_list):]:  # do wTx
+	wTx += w[D+d] * i
+	d+=1
     return 1. / (1. + exp(-max(min(wTx, 20.), -20.)))  # bounded sigmoid
 
 # D. Update given model
@@ -138,24 +130,25 @@ def predict(x, w):
 #     w: weights
 #     n: sum of past absolute gradients
 def update(alpha, w, n, x, p, y):
-    global D,floats_list,w_max, w_min, w_min_s, w_max_s
-    for i in range(len(x)-len(floats_list)):
+    global D,floats_list
+    for i in x[:len(x)-len(floats_list)]:  # do wTx
         # do wTx
         # alpha / sqrt(n) is the adaptive learning rate
         # (p - y) * x[i] is the current gradient
         # note that in our case, if i in x then x[i] = 1.
-	n[x[i]] += abs(p - y)
-	w[x[i]] -= (p - y) * 1. * alpha / sqrt(n[x[i]])
-	if w[x[i]]<w_min:
-		w_min=w[x[i]]
-		w_min_s = x[i]
-	if w[i]>w_max:
-		w_max=w[x[i]]
-		w_max_s=x[i]
-    for j,i in zip(range(len(floats_list)), range(len(x)-len(floats_list),len(x))):  # do wTx
-	n[j] += abs(p - y)*x[i]
-	w[j] -= (p - y) * x[i] * alpha / sqrt(n[j])
+	n[i] += abs(p - y)
+	w[i] -= (p - y) * 1. * alpha / sqrt(n[i])
 
-def print_weights():
-	print w_max, w_max_s
-	print w_min, w_min_s
+    d=0
+    for i in x[len(x)-len(floats_list):]:  # do wTx
+	n[D+d] += abs((p - y)*i)
+	w[D+d] -= (p - y) * i * alpha / sqrt(n[D+d])
+	d+=1
+
+def update_floats(alpha, w, n, x, p, y):
+    global D,floats_list
+    d=0
+    for i in x[len(x)-len(floats_list):]:  # do wTx
+	n[D+d] += abs((p - y)*i)
+	w[D+d] -= (p - y) * i * alpha / sqrt(n[D+d])
+	d+=1

@@ -64,8 +64,8 @@ start = datetime.now()
 K = [k for k in range(33) if k != 13]
 
 # initialize our model, all 32 of them, again ignoring y14
-w = [[0.] * (D +1) if k != 13 else None for k in range(33)]
-n = [[0.] * (D +1) if k != 13 else None for k in range(33)]
+w = [[0.] * (D+len(bag_of_hash.floats_list)) if k != 13 else None for k in range(33)]
+n = [[0.] * (D+len(bag_of_hash.floats_list)) if k != 13 else None for k in range(33)]
 
 loss = 0.
 loss_y14 = log(1. - 10**-15)
@@ -110,5 +110,4 @@ if parser.has_option('config', 'test_file'):
                     if k == 12:
                         outfile.write('%s_y14,0.0\n' % ID)
 
-bag_of_hash.print_weights()
 print('Done, elapsed time: %s' % str(datetime.now() - start))
