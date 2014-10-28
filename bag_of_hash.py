@@ -22,8 +22,10 @@ parser = SafeConfigParser()
 parser.read('config.ini')
 D = parser.getint('config', 'D')  # number of weights use for each model, we have 32 of them
 
-floats_list=[121, 122, 123, 124, 125,132,135,137,144,145]
+lambada = parser.getfloat('config', 'lambada')  # number of weights use for each model, we have 32 of them
 
+non_hash=list(int(z) for z in parser.get('config', 'non_hash').split(","))
+hash_non_hash=parser.getboolean('config', 'hash_non_hash')
 # function, generator definitions ############################################
 
 # A. x, y generator
@@ -43,7 +45,7 @@ def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
 	    features_count = 146
 	    if deep_hash_joins: features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins)#*2
 	    if hash_joins: features_count +=len(hash_joins)#*2
-	    if floats_list: features_count +=len(floats_list)
+	    if non_hash and hash_non_hash: features_count +=len(non_hash)
 	    x = [0] * (features_count)
             if label_path:
                 label = open(label_path)
@@ -63,9 +65,13 @@ def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
                 # note, the build in hash(), although fast is not stable,
                 #       i.e., same value won't always have the same hash
                 #       on different machines
-		if m in floats_list: floats+=[float(feat)]
-		x[m] = abs(hash(str(m) + '_' + feat)) % D
-        tw = 145
+		if m in non_hash: 
+			floats+=[float(feat)]
+			if hash_non_hash:
+				x[m] = abs(hash(str(m) + '_' + feat)) % D
+		else: 
+			x[m] = abs(hash(str(m) + '_' + feat)) % D
+        tw = 145 - 0 if hash_non_hash else len(floats)
 	if deep_hash_joins:			
 		for i in range(len(deep_hash_joins)):
 			for j in range(len(deep_hash_joins[i])-1):
@@ -107,12 +113,11 @@ def logloss(p, y):
 # OUTPUT:
 #     probability of p(y = 1 | x; w)
 def predict(x, w):
-    global D, floats_list
     wTx = 0.
-    for i in x[:len(x)-len(floats_list)]:  # do wTx
+    for i in x[:len(x)-len(non_hash)]:  # do wTx
 	wTx += w[i] * 1.  # w[i] * x[i], but if i in x we got x[i] = 1.
     d=0
-    for i in x[len(x)-len(floats_list):]:  # do wTx
+    for i in x[len(x)-len(non_hash):]:  # do wTx
 	wTx += w[D+d] * i
 	d+=1
     return 1. / (1. + exp(-max(min(wTx, 20.), -20.)))  # bounded sigmoid
@@ -130,25 +135,24 @@ def predict(x, w):
 #     w: weights
 #     n: sum of past absolute gradients
 def update(alpha, w, n, x, p, y):
-    global D,floats_list
-    for i in x[:len(x)-len(floats_list)]:  # do wTx
+    for i in x[:len(x)-len(non_hash)]:  # do wTx
         # do wTx
         # alpha / sqrt(n) is the adaptive learning rate
         # (p - y) * x[i] is the current gradient
         # note that in our case, if i in x then x[i] = 1.
-	n[i] += abs(p - y)
-	w[i] -= (p - y) * 1. * alpha / sqrt(n[i])
+	n[i] += abs((p - y)  + lambada*w[i])
+	w[i] -= ((p - y) * 1. + lambada*w[i]) * alpha / sqrt(n[i])
 
     d=0
-    for i in x[len(x)-len(floats_list):]:  # do wTx
-	n[D+d] += abs((p - y)*i)
-	w[D+d] -= (p - y) * i * alpha / sqrt(n[D+d])
+    for i in x[len(x)-len(non_hash):]:  # do wTx
+	n[D+d] += abs((p - y)*i  + lambada*w[D+d])
+	w[D+d] -= ((p - y) * i  + lambada*w[D+d]) * alpha / sqrt(n[D+d])
 	d+=1
 
 def update_floats(alpha, w, n, x, p, y):
-    global D,floats_list
+    global D,non_hash
     d=0
-    for i in x[len(x)-len(floats_list):]:  # do wTx
-	n[D+d] += abs((p - y)*i)
-	w[D+d] -= (p - y) * i * alpha / sqrt(n[D+d])
+    for i in x[len(x)-len(non_hash):]:  # do wTx
+	n[D+d] += abs((p - y)*i  + lambada*w[D+d])
+	w[D+d] -= ((p - y) * i   + lambada*w[D+d]) * alpha / sqrt(n[D+d])
 	d+=1

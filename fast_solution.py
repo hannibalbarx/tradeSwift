@@ -50,11 +50,14 @@ if parser.has_option('config', 'deep_hash_joins'):
 if parser.has_option('config', 'hash_joins'):
         hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'hash_joins').split(";")))
         features_count +=len(hash_joins) #*2
-if bag_of_hash.floats_list: features_count +=len(bag_of_hash.floats_list)
+if bag_of_hash.non_hash and bag_of_hash.hash_non_hash: features_count +=len(bag_of_hash.non_hash)
 
 print "D= %s"%parser.get('config', 'D')
 if parser.has_option('config', 'deep_hash_joins'): print "deep_hash_joins = %s"%parser.get('config', 'deep_hash_joins')
 if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get('config', 'hash_joins')
+if bag_of_hash.non_hash: print "non_hash = %s"%bag_of_hash.non_hash
+if bag_of_hash.hash_non_hash: print "hash_non_hash = true"
+if parser.has_option('config', 'lambada'):  print "lambada %s"% parser.getfloat('config', 'lambada') 
 print 'features count = %s'%features_count
 
 # training and testing #######################################################
@@ -64,8 +67,8 @@ start = datetime.now()
 K = [k for k in range(33) if k != 13]
 
 # initialize our model, all 32 of them, again ignoring y14
-w = [[0.] * (D+len(bag_of_hash.floats_list)) if k != 13 else None for k in range(33)]
-n = [[0.] * (D+len(bag_of_hash.floats_list)) if k != 13 else None for k in range(33)]
+w = [[0.] * (D+len(bag_of_hash.non_hash)) if k != 13 else None for k in range(33)]
+n = [[0.] * (D+len(bag_of_hash.non_hash)) if k != 13 else None for k in range(33)]
 
 loss = 0.
 loss_y14 = log(1. - 10**-15)
@@ -98,35 +101,6 @@ if parser.has_option('config', 'validation_file'):
         if (ID3):
                 print('%s\tencountered: %d\tlogloss: %f' % (
                     datetime.now(), ID3, (loss3/33.)/ID3))
-
-for iter in range(5):
-	print 'training...'
-	for ID, x, y in bag_of_hash.data(train, label, deep_hash_joins, hash_joins):
-	    ID2+=1
-	    for k in K:
-		p = bag_of_hash.predict(x, w[k])
-		bag_of_hash.update_floats(alpha, w[k], n[k], x, p, y[k])
-		loss += bag_of_hash.logloss(p, y[k])  # for progressive validation
-	    loss += loss_y14  # the loss of y14, logloss is never zero
-
-	    # print out progress, so that we know everything is working
-	    if ID % 100000 == 0:
-		print('%s\tencountered: %d\tlogloss: %f' % (
-		    datetime.now(), ID2, (loss/33.)/ID2))
-
-	if parser.has_option('config', 'validation_file'):
-		print 'validation...'
-		loss3 = 0.
-		ID3=0
-		for ID, x, y in bag_of_hash.data(parser.get('config', 'validation_file'), parser.get('config', 'validation_labels'), deep_hash_joins, hash_joins):
-		    ID3+=1
-		    for k in K:
-			p = bag_of_hash.predict(x, w[k])
-			loss3 += bag_of_hash.logloss(p, y[k])
-		    loss3 += loss_y14
-		if (ID3):
-			print('%s\tencountered: %d\tlogloss: %f' % (
-			    datetime.now(), ID3, (loss3/33.)/ID3))
 
 if parser.has_option('config', 'test_file'):
         print 'testing...'
