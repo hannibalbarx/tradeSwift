@@ -10,7 +10,7 @@ results_q = conn.get_queue("ResultsQueue")
 while True:
 		cur_message= tasks_q.read()
 		if cur_message:
-			print int(cur_message.get_body())
+			print cur_message.get_body()
 			sys.stdout.flush()
 			input=raw_input()
 			while input!="done":

@@ -24,8 +24,21 @@ D = parser.getint('config', 'D')  # number of weights use for each model, we hav
 
 lambada = parser.getfloat('config', 'lambada')  # number of weights use for each model, we have 32 of them
 
-non_hash=list(int(z) for z in parser.get('config', 'non_hash').split(","))
-hash_non_hash=parser.getboolean('config', 'hash_non_hash')
+non_hash=list(int(z) for z in parser.get('config', 'non_hash').split(",")) if parser.has_option('config', 'non_hash') else []
+hash_non_hash=parser.getboolean('config', 'hash_non_hash') if parser.has_option('config', 'hash_non_hash') else False
+
+w=[]
+n=[]
+
+def reset_weights():
+	global w,n
+	del w, n
+	# initialize our model, all 32 of them, again ignoring y14
+	w = [[0.] * (D+len(non_hash)) if k != 13 else None for k in range(33)]
+	n = [[0.] * (D+len(non_hash)) if k != 13 else None for k in range(33)]
+
+reset_weights()
+
 # function, generator definitions ############################################
 
 # A. x, y generator
@@ -71,7 +84,7 @@ def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
 				x[m] = abs(hash(str(m) + '_' + feat)) % D
 		else: 
 			x[m] = abs(hash(str(m) + '_' + feat)) % D
-        tw = 145 - 0 if hash_non_hash else len(floats)
+        tw = 145 - (0 if hash_non_hash else len(floats))
 	if deep_hash_joins:			
 		for i in range(len(deep_hash_joins)):
 			for j in range(len(deep_hash_joins[i])-1):
@@ -150,7 +163,6 @@ def update(alpha, w, n, x, p, y):
 	d+=1
 
 def update_floats(alpha, w, n, x, p, y):
-    global D,non_hash
     d=0
     for i in x[len(x)-len(non_hash):]:  # do wTx
 	n[D+d] += abs((p - y)*i  + lambada*w[D+d])

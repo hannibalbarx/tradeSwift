@@ -66,10 +66,6 @@ start = datetime.now()
 # a list for range(0, 33) - 13, no need to learn y14 since it is always 0
 K = [k for k in range(33) if k != 13]
 
-# initialize our model, all 32 of them, again ignoring y14
-w = [[0.] * (D+len(bag_of_hash.non_hash)) if k != 13 else None for k in range(33)]
-n = [[0.] * (D+len(bag_of_hash.non_hash)) if k != 13 else None for k in range(33)]
-
 loss = 0.
 loss_y14 = log(1. - 10**-15)
 
@@ -78,8 +74,8 @@ ID2=0
 for ID, x, y in bag_of_hash.data(train, label, deep_hash_joins, hash_joins):
     ID2+=1
     for k in K:
-        p = bag_of_hash.predict(x, w[k])
-        bag_of_hash.update(alpha, w[k], n[k], x, p, y[k])
+        p = bag_of_hash.predict(x, bag_of_hash.w[k])
+        bag_of_hash.update(alpha, bag_of_hash.w[k], bag_of_hash.n[k], x, p, y[k])
         loss += bag_of_hash.logloss(p, y[k])  # for progressive validation
     loss += loss_y14  # the loss of y14, logloss is never zero
 
