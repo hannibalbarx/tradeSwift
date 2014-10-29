@@ -5,6 +5,7 @@ import sys
 
 conn = boto.sqs.connect_to_region("us-east-1")
 tasks_q = conn.get_queue("TasksQueue")
+tasks_q.set_message_class(RawMessage)
 results_q = conn.get_queue("ResultsQueue")
 
 while True:
