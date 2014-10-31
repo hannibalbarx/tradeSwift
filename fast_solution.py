@@ -55,7 +55,7 @@ if bag_of_hash.non_hash and bag_of_hash.hash_non_hash: features_count +=len(bag_
 print "D= %s"%parser.get('config', 'D')
 if parser.has_option('config', 'deep_hash_joins'): print "deep_hash_joins = %s"%parser.get('config', 'deep_hash_joins')
 if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get('config', 'hash_joins')
-if bag_of_hash.non_hash: print "non_hash = %s"%bag_of_hash.non_hash
+if bag_of_hash.non_hash: print "non_hash = %s"%parser.get('config', 'non_hash')
 if bag_of_hash.hash_non_hash: print "hash_non_hash = true"
 if parser.has_option('config', 'lambada'):  print "lambada %s"% parser.getfloat('config', 'lambada') 
 print 'features count = %s'%features_count
@@ -91,7 +91,7 @@ if parser.has_option('config', 'validation_file'):
         for ID, x, y in bag_of_hash.data(parser.get('config', 'validation_file'), parser.get('config', 'validation_labels'), deep_hash_joins, hash_joins):
             ID3+=1
             for k in K:
-                p = bag_of_hash.predict(x, w[k])
+                p = bag_of_hash.predict(x, bag_of_hash.w[k])
                 loss3 += bag_of_hash.logloss(p, y[k])
             loss3 += loss_y14
         if (ID3):
@@ -104,7 +104,7 @@ if parser.has_option('config', 'test_file'):
             outfile.write('id_label,pred\n')
             for ID, x in bag_of_hash.data(parser.get('config', 'test_file'), deep_hash_joins, hash_joins):
                 for k in K:
-                    p = bag_of_hash.predict(x, w[k])
+                    p = bag_of_hash.predict(x, bag_of_hash.w[k])
                     outfile.write('%s_y%d,%s\n' % (ID, k+1, str(p)))
                     if k == 12:
                         outfile.write('%s_y14,0.0\n' % ID)
