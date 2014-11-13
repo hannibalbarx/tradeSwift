@@ -103,10 +103,22 @@ if parser.has_option('config', 'test_file'):
         with open('./sontag.csv', 'w') as outfile:
             outfile.write('id_label,pred\n')
             for ID, x in bag_of_hash.data(parser.get('config', 'test_file'), deep_hash_joins, hash_joins):
+		outfile.write('%s,' % ID)
+                for k in K:
+                    p = bag_of_hash.predict(x, bag_of_hash.w[k])
+                    outfile.write(',%.6f' % p)
+                    if k == 12:
+                        outfile.write('%s_y14,0.0\n' % ID)
+'''
+if parser.has_option('config', 'test_file'):
+        print 'testing...'
+        with open('./sontag.csv', 'w') as outfile:
+            outfile.write('id_label,pred\n')
+            for ID, x in bag_of_hash.data(parser.get('config', 'test_file'), deep_hash_joins, hash_joins):
                 for k in K:
                     p = bag_of_hash.predict(x, bag_of_hash.w[k])
                     outfile.write('%s_y%d,%s\n' % (ID, k+1, str(p)))
                     if k == 12:
                         outfile.write('%s_y14,0.0\n' % ID)
-
+'''
 print('Done, elapsed time: %s' % str(datetime.now() - start))
