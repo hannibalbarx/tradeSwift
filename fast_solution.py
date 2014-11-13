@@ -50,13 +50,10 @@ if parser.has_option('config', 'deep_hash_joins'):
 if parser.has_option('config', 'hash_joins'):
         hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'hash_joins').split(";")))
         features_count +=len(hash_joins) #*2
-if bag_of_hash.non_hash and bag_of_hash.hash_non_hash: features_count +=len(bag_of_hash.non_hash)
 
 print "D= %s"%parser.get('config', 'D')
 if parser.has_option('config', 'deep_hash_joins'): print "deep_hash_joins = %s"%parser.get('config', 'deep_hash_joins')
 if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get('config', 'hash_joins')
-if bag_of_hash.non_hash: print "non_hash = %s"%parser.get('config', 'non_hash')
-if bag_of_hash.hash_non_hash: print "hash_non_hash = true"
 if parser.has_option('config', 'lambada'):  print "lambada %s"% parser.getfloat('config', 'lambada') 
 print 'features count = %s'%features_count
 
