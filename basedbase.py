@@ -1,13 +1,21 @@
 # coding=utf-8 
 import pandas as pd
 import numpy as np
+from time import strftime
 
 from ConfigParser import SafeConfigParser
 parser = SafeConfigParser()
 parser.read('config.ini')
 train_file = parser.get('config', 'train_file_1')
 labels_file = parser.get('config', 'train_labels')
-test_file = parser.get('config', 'test_file')
+test_file = parser.get('config', 'validation_file')
+print "train file "+train_file
+print "test file "+test_file
+
+base_trees = parser.getint('config', 'base_trees')
+procs = parser.getint('config', 'procs')
+print "base trees %d"%base_trees
+print "procs %d"%procs
 
 train_sample = pd.read_csv(train_file)
 labels = pd.read_csv(labels_file)
@@ -46,7 +54,7 @@ for name in train_with_labels.columns :
             train_with_labels[name] = map(str, train_with_labels[name])
             test[name] = map(str, test[name])
             names_categorical.append(name)
-            print name, len(np.unique(train_with_labels[name]))
+            print strftime("%a %d %b %Y %H:%M:%S")+" "+name, len(np.unique(train_with_labels[name]))
         else :
             X_numerical.append(train_with_labels[name].fillna(-999))
             X_test_numerical.append(test[name].fillna(-999))
@@ -57,7 +65,7 @@ X_test_numerical = np.column_stack(X_test_numerical)
 X_sparse = vec.fit_transform(train_with_labels[names_categorical].T.to_dict().values())
 X_test_sparse = vec.transform(test[names_categorical].T.to_dict().values())
 
-print X_numerical.shape, X_sparse.shape, X_test_numerical.shape, X_test_sparse.shape
+print strftime("%a %d %b %Y %H:%M:%S"), X_numerical.shape, X_sparse.shape, X_test_numerical.shape, X_test_sparse.shape
 
 X_numerical = np.nan_to_num(X_numerical)
 X_test_numerical = np.nan_to_num(X_test_numerical)
@@ -79,14 +87,14 @@ X_numerical_base, X_numerical_meta, X_sparse_base, X_sparse_meta, y_base, y_meta
 X_meta = [] 
 X_test_meta = []
 
-print "Build meta"
+print strftime("%a %d %b %Y %H:%M:%S")+" Build meta"
 
 for i in range(y_base.shape[1]) :
-    print i
+    print strftime("%a %d %b %Y %H:%M:%S")+" y"+str(i+1)
     
     y = y_base[:, i]
     if len(np.unique(y)) == 2 : 
-        rf = RandomForestClassifier(n_estimators = 10, n_jobs = 1)
+        rf = RandomForestClassifier(n_estimators = base_trees, n_jobs = procs)
         rf.fit(X_numerical_base, y)
         X_meta.append(rf.predict_proba(X_numerical_meta))
         X_test_meta.append(rf.predict_proba(X_test_numerical))
@@ -99,7 +107,7 @@ for i in range(y_base.shape[1]) :
 X_meta = np.column_stack(X_meta)
 X_test_meta = np.column_stack(X_test_meta)
 
-print X_meta.shape, X_numerical_meta.shape, X_test_meta.shape, X_test_numerical.shape, y_base.shape, y_meta.shape
+print strftime("%a %d %b %Y %H:%M:%S"), X_meta.shape, X_numerical_meta.shape, X_test_meta.shape, X_test_numerical.shape, y_base.shape, y_meta.shape
 
 from sklearn.externals import joblib
 joblib.dump(

@@ -7,13 +7,20 @@ from sklearn.externals import joblib
 from sklearn.metrics import roc_auc_score, f1_score, log_loss, make_scorer
 from sklearn.ensemble import RandomForestClassifier
 from collections import Counter
+
 import os
+from time import strftime
 
 from ConfigParser import SafeConfigParser
 parser = SafeConfigParser()
 parser.read('config.ini')
 test_file = parser.get('config', 'validation_file')
 test = pd.read_csv(test_file)
+
+meta_trees = parser.getint('config', 'meta_trees')
+procs = parser.getint('config', 'procs')
+print "meta trees %d"%meta_trees
+print "procs %d"%procs
 
 X_meta, X_numerical_meta, X_test_meta, X_test_numerical, y_base, y_meta = joblib.load("Meta.dump")
 
@@ -29,13 +36,13 @@ for i in range(len(p_test), y_base.shape[1]) :
     constant = Counter(y)
     constant = constant[0] < 4 or constant[1] < 4
     predicted = None
-    print "working on y"+str(i)
+    print strftime("%a %d %b %Y %H:%M:%S")+" working on y"+str(i+1)
     if constant :
         # Best constant
         constant_pred = np.mean(list(y_base[:, i]) + list(y_meta[:, i]))
         predicted = np.ones(X_test_meta.shape[0]) * constant_pred
     else :
-        rf = RandomForestClassifier(n_estimators=30, n_jobs = 1)
+        rf = RandomForestClassifier(n_estimators=meta_trees, n_jobs = procs)
         rf.fit(np.hstack([X_meta, X_numerical_meta]), y)
         predicted = rf.predict_proba(np.hstack([X_test_meta, X_test_numerical]))
         predicted = predicted[:, 1]
@@ -51,7 +58,7 @@ test_labels = pd.read_csv(parser.get('config', 'validation_labels'))
 del test_labels["id"]
 test_labels=np.asarray(test_labels).flatten()
 
-print "log loss = %.6f"%log_loss(test_labels, p_test, eps=1e-15)
+print strftime("%a %d %b %Y %H:%M:%S")+" log loss = %.6f"%log_loss(test_labels, p_test, eps=1e-15)
 
 '''
 import gzip
