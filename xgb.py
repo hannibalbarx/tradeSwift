@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from time import strftime
 
 from sklearn.externals import joblib
 
@@ -27,7 +28,7 @@ X=np.hstack([X_meta, X_numerical_meta])
 X_test=np.hstack([X_test_meta, X_test_numerical])
 
 for i in range(33):
-	print "training label %d"%(i+1)
+	print strftime("%a %d %b %Y %H:%M:%S")+"training label %d"%(i+1)
 	dtrain=xgb.DMatrix(X, label=y_meta[:,i])
 	dtest=xgb.DMatrix(X_test, label=test_labels[:,i])
 	evallist  = [(dtest,'eval'), (dtrain,'train')]
