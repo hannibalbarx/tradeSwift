@@ -26,13 +26,14 @@ print X_meta.shape, X_numerical_meta.shape, X_test_meta.shape, X_test_numerical.
 X=np.hstack([X_meta, X_numerical_meta])
 X_test=np.hstack([X_test_meta, X_test_numerical])
 
-dtrain=xgb.DMatrix(X, label=y_meta[:,32])
-dtest=xgb.DMatrix(X_test, label=test_labels[:,32])
-evallist  = [(dtest,'eval'), (dtrain,'train')]
+for i in range(33):
+	dtrain=xgb.DMatrix(X, label=y_meta[:,i])
+	dtest=xgb.DMatrix(X_test, label=test_labels[:,i])
+	evallist  = [(dtest,'eval'), (dtrain,'train')]
 
-param = {'bst:max_depth':2, 'bst:eta':1, 'silent':1, 'objective':'binary:logistic' }
-param['nthread'] = procs
-plst = param.items()
-plst += [('eval_metric', 'logloss')]
-num_round = 25
-bst = xgb.train( plst, dtrain, num_round, evallist)
+	param = {'bst:max_depth':2, 'bst:eta':1, 'silent':1, 'objective':'binary:logistic' }
+	param['nthread'] = procs
+	plst = param.items()
+	plst += [('eval_metric', 'logloss')]
+	num_round = 45
+	bst = xgb.train( plst, dtrain, num_round, evallist)
