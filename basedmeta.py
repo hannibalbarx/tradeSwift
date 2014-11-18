@@ -4,7 +4,7 @@ import numpy as np
 
 from sklearn.externals import joblib
 
-from sklearn.metrics import roc_auc_score, f1_score, log_loss, make_scorer
+from sklearn.metrics import log_loss
 from sklearn.ensemble import RandomForestClassifier
 from collections import Counter
 
