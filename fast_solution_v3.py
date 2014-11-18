@@ -40,12 +40,12 @@ L1 = 1.     # L1 regularization, larger value means more regularized
 L2 = 1.     # L2 regularization, larger value means more regularized
 
 # C, feature/hash trick
-D = 2 ** 26             # number of weights to use
+D = 2 ** 31             # number of weights to use
 interaction = False     # whether to enable poly2 feature interactions
 
 # D, training/validation
-epoch = 1       # learn training data for N passes
-holdafter = 9   # data after date N (exclusive) are used as validation
+epoch = 2       # learn training data for N passes
+holdafter = None   # data after date N (exclusive) are used as validation
 holdout = None  # use every N training instance for holdout validation
 
 
@@ -282,8 +282,9 @@ for e in xrange(epoch):
             # step 2-2, update learner with label (click) information
             learner.update(x, p, y)
 
-    print('Epoch %d finished, validation logloss: %f, elapsed time: %s' % (
-        e, loss/count, str(datetime.now() - start)))
+    if holdafter or holdout:
+	print('Epoch %d finished, validation logloss: %f, elapsed time: %s' % (
+		e, loss/count, str(datetime.now() - start)))
 
 
 ##############################################################################
