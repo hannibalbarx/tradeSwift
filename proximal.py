@@ -295,7 +295,7 @@ while True:
             # holdout: validate with every N instance, train with others
             loss += logloss(p, y)
             count += 1
-	    if not count%25000:
+	    if not count%printhz:
 		print('validation logloss: %f' % (loss/count))
         else:
             # step 2-2, update learner with label (click) information
