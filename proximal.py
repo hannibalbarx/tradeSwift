@@ -16,6 +16,8 @@ as the name is changed.
 
 
 from datetime import datetime
+from time import strftime
+
 from csv import DictReader
 from math import exp, log, sqrt
 
@@ -28,26 +30,35 @@ from math import exp, log, sqrt
 # parameters #################################################################
 ##############################################################################
 
+from ConfigParser import SafeConfigParser
+parser = SafeConfigParser()
+parser.read('config.ini')
+
 # A, paths
-train = 'data/train'               # path to training file
-test = 'data/test'                 # path to testing file
-submission = 'adminabuddha.csv'  # path of to be outputted submission file
+train = parser.get('config', 'train_file_1')
+print "train file = %s"%train
+if parser.has_option('config', 'test_file'): 
+	test = parser.get('config', 'test_file')
+	submission = parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.csv'  # path of to be outputted submission file
+	print "test file = %s submission file = %s"%(test, submission)
 
 # B, model
-alpha = .1  # learning rate
-beta = 1.   # smoothing parameter for adaptive learning rate
-L1 = 1.     # L1 regularization, larger value means more regularized
-L2 = 1.     # L2 regularization, larger value means more regularized
+alpha = parser.getfloat('config', 'alpha')  # learning rate
+beta = parser.getfloat('config', 'beta')   # smoothing parameter for adaptive learning rate
+L1 = parser.getfloat('config', 'L1')      # L1 regularization, larger value means more regularized
+L2 = parser.getfloat('config', 'L2')     # L2 regularization, larger value means more regularized
+print "alpha=%f beta=%f L1=%f L2=%f"%(alpha, beta, L1, L2)
 
 # C, feature/hash trick
-D = 2 ** 31             # number of weights to use
-interaction = False     # whether to enable poly2 feature interactions
+D = parser.getint('config', 'D')  # number of weights use for each model, we have 32 of them
+interaction = parser.getboolean('config', 'interaction') # whether to enable poly2 feature interactions
+print "D=%d interaction=%s"%(D, interaction)
 
 # D, training/validation
-epoch = 2       # learn training data for N passes
+epoch = parser.getint('config', 'epochs')       # learn training data for N passes
 holdafter = None   # data after date N (exclusive) are used as validation
-holdout = None  # use every N training instance for holdout validation
-
+holdout = parser.getint('config', 'holdout') if parser.has_option('config', 'holdout') else None  # use every N training instance for holdout validation
+print "epochs=%d holdout=%d"%(epoch,holdout)
 
 ##############################################################################
 # class, function, generator definitions #####################################
@@ -100,13 +111,15 @@ class ftrl_proximal(object):
         # now yield interactions (if applicable)
         if self.interaction:
             D = self.D
-            L = len(x)
+	    print x[1], x[2], x[3]
+	    yield abs(hash(str(x[15]) + '_' + str(x[16]))) % D
+            '''L = len(x)
 
             x = sorted(x)
             for i in xrange(L):
                 for j in xrange(i+1, L):
                     # one-hot encode interactions with hash trick
-                    yield abs(hash(str(x[i]) + '_' + str(x[j]))) % D
+                    yield abs(hash(str(x[i]) + '_' + str(x[j]))) % D'''
 
     def predict(self, x):
         ''' Get probability estimation on x
@@ -281,18 +294,18 @@ for e in xrange(epoch):
         else:
             # step 2-2, update learner with label (click) information
             learner.update(x, p, y)
-
+    print('Epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
     if holdafter or holdout:
-	print('Epoch %d finished, validation logloss: %f, elapsed time: %s' % (
-		e, loss/count, str(datetime.now() - start)))
+	print('validation logloss: %f' % (loss/count))
 
 
 ##############################################################################
 # start testing, and build Kaggle's submission file ##########################
 ##############################################################################
 
-with open(submission, 'w') as outfile:
-    outfile.write('id,click\n')
-    for t, date, ID, x, y in data(test, D):
-        p = learner.predict(x)
-        outfile.write('%s,%s\n' % (ID, str(p)))
+if parser.has_option('config', 'test_file'): 
+	with open(submission, 'w') as outfile:
+	    outfile.write('id,click\n')
+	    for t, date, ID, x, y in data(test, D):
+		p = learner.predict(x)
+		outfile.write('%s,%.6f\n' % (ID, p))
