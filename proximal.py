@@ -55,11 +55,15 @@ D = parser.getint('config', 'D')  # number of weights use for each model, we hav
 interaction = parser.getboolean('config', 'interaction') # whether to enable poly2 feature interactions
 print "D=%d\ninteraction=%s"%(D, interaction)
 
+if interaction: print "interactions C15_C16"
+
 # D, training/validation
 epoch = parser.getint('config', 'epochs')       # learn training data for N passes
 holdafter = None   # data after date N (exclusive) are used as validation
 holdout = parser.getint('config', 'holdout') if parser.has_option('config', 'holdout') else None  # use every N training instance for holdout validation
-print "epochs=%d\nholdout=%d"%(epoch,holdout)
+#print "epochs=%d"%epoch
+print "infinite epochs"
+print "holdout=%d"%holdout
 
 printhz = parser.getint('config', 'printhz')  # number of weights use for each model, we have 32 of them
 
@@ -269,7 +273,6 @@ learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 
 # start training
 e=0
-print "infinite epochs"
 while True:
     loss = 0.
     count = 0
@@ -296,13 +299,13 @@ while True:
             loss += logloss(p, y)
             count += 1
 	    if not count%printhz:
-		print('validation logloss: %f' % (loss/count))
+		print('%f' % (loss/count)),
         else:
             # step 2-2, update learner with label (click) information
             learner.update(x, p, y)
-    print('Epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
     if holdafter or holdout:
-	print('validation logloss: %f' % (loss/count))
+	print('\nvalidation logloss: %f when' % (loss/count)),
+    print('epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
     if parser.has_option('config', 'test_file'): 
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.'+str(e)+'.csv', 'w') as outfile:
 	    outfile.write('id,click\n')
