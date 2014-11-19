@@ -30,6 +30,7 @@ from math import exp, log, sqrt
 # parameters #################################################################
 ##############################################################################
 
+print strftime("%a %d %b %Y %H:%M:%S")+" wassup"
 from ConfigParser import SafeConfigParser
 parser = SafeConfigParser()
 parser.read('config.ini')
@@ -39,7 +40,7 @@ train = parser.get('config', 'train_file_1')
 print "train file = %s"%train
 if parser.has_option('config', 'test_file'): 
 	test = parser.get('config', 'test_file')
-	submission = parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.csv'  # path of to be outputted submission file
+	submission = parser.get('config', 'submission_file')+'.csv'  # path of to be outputted submission file
 	print "test file = %s\nsubmission file = %s"%(test, submission)
 
 # B, model
@@ -265,7 +266,8 @@ start = datetime.now()
 learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 
 # start training
-for e in xrange(epoch):
+e=0
+while True:
     loss = 0.
     count = 0
 
@@ -290,21 +292,26 @@ for e in xrange(epoch):
             # holdout: validate with every N instance, train with others
             loss += logloss(p, y)
             count += 1
+	    if not count%25000:
+		print('validation logloss: %f' % (loss/count))
         else:
             # step 2-2, update learner with label (click) information
             learner.update(x, p, y)
     print('Epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
     if holdafter or holdout:
 	print('validation logloss: %f' % (loss/count))
+    if parser.has_option('config', 'test_file'): 
+	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.'+str(e)+'.csv', 'w') as outfile:
+	    outfile.write('id,click\n')
+	    for t, date, ID, x, y in data(test, D):
+		p = learner.predict(x)
+		outfile.write('%s,%.6f\n' % (ID, p))
+    e+=1
 
 
 ##############################################################################
 # start testing, and build Kaggle's submission file ##########################
 ##############################################################################
 
-if parser.has_option('config', 'test_file'): 
-	with open(submission, 'w') as outfile:
-	    outfile.write('id,click\n')
-	    for t, date, ID, x, y in data(test, D):
-		p = learner.predict(x)
-		outfile.write('%s,%.6f\n' % (ID, p))
+print strftime("%a %d %b %Y %H:%M:%S")+" imma bounce"
+		
