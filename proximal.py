@@ -59,13 +59,18 @@ if interaction: print "interactions C15_C16"
 
 # D, training/validation
 epoch = parser.getint('config', 'epochs')       # learn training data for N passes
-holdafter = None   # data after date N (exclusive) are used as validation
-holdout = parser.getint('config', 'holdout') if parser.has_option('config', 'holdout') else None  # use every N training instance for holdout validation
+holdafter = None
+if parser.has_option('config', 'holdafter') :
+	holdafter = parser.getint('config', 'holdafter') # data after date N (exclusive) are used as validation
+	print "holdafter=%d"%holdafter
+holdout = None
+if parser.has_option('config', 'holdout'):
+	holdout = parser.getint('config', 'holdout') # use every N training instance for holdout validation
+	print "holdout=%d"%holdout
 #print "epochs=%d"%epoch
 print "infinite epochs"
-print "holdout=%d"%holdout
 
-printhz = parser.getint('config', 'printhz')  # number of weights use for each model, we have 32 of them
+print_hz = parser.getint('config', 'print_hz')  # number of weights use for each model, we have 32 of them
 
 ##############################################################################
 # class, function, generator definitions #####################################
@@ -298,7 +303,7 @@ while True:
             # holdout: validate with every N instance, train with others
             loss += logloss(p, y)
             count += 1
-	    if not count%printhz:
+	    if not count%print_hz:
 		print('%f' % (loss/count)),
         else:
             # step 2-2, update learner with label (click) information
