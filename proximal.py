@@ -61,6 +61,8 @@ holdafter = None   # data after date N (exclusive) are used as validation
 holdout = parser.getint('config', 'holdout') if parser.has_option('config', 'holdout') else None  # use every N training instance for holdout validation
 print "epochs=%d\nholdout=%d"%(epoch,holdout)
 
+printhz = parser.getint('config', 'printhz')  # number of weights use for each model, we have 32 of them
+
 ##############################################################################
 # class, function, generator definitions #####################################
 ##############################################################################
@@ -267,6 +269,7 @@ learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 
 # start training
 e=0
+print "infinite epochs"
 while True:
     loss = 0.
     count = 0
