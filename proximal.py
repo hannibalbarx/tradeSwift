@@ -51,26 +51,30 @@ L2 = parser.getfloat('config', 'L2')     # L2 regularization, larger value means
 print "alpha=%f\nbeta=%f\nL1=%f\nL2=%f"%(alpha, beta, L1, L2)
 
 # C, feature/hash trick
-D = parser.getint('config', 'D')  # number of weights use for each model, we have 32 of them
-interaction = parser.getboolean('config', 'interaction') # whether to enable poly2 feature interactions
+D = parser.getint('config', 'D') 
+interaction = parser.getboolean('config', 'interaction')
 print "D=%d\ninteraction=%s"%(D, interaction)
 
-if interaction: print "interactions C15_C16"
+if interaction:
+	interaction_features = parser.get('config', 'interaction_features')
+	print "interactions %s"%interaction_features
 
 # D, training/validation
-epoch = parser.getint('config', 'epochs')       # learn training data for N passes
 holdafter = None
 if parser.has_option('config', 'holdafter') :
-	holdafter = parser.getint('config', 'holdafter') # data after date N (exclusive) are used as validation
+	holdafter = parser.getint('config', 'holdafter')
 	print "holdafter=%d"%holdafter
 holdout = None
 if parser.has_option('config', 'holdout'):
-	holdout = parser.getint('config', 'holdout') # use every N training instance for holdout validation
+	holdout = parser.getint('config', 'holdout') 
 	print "holdout=%d"%holdout
-#print "epochs=%d"%epoch
-print "infinite epochs"
+epoch = parser.getint('config', 'epochs')
+if not epoch:
+	print "infinite epochs"
+else:
+	print "epochs=%d"%epoch
 
-print_hz = parser.getint('config', 'print_hz')  # number of weights use for each model, we have 32 of them
+print_hz = parser.getint('config', 'print_hz')
 
 ##############################################################################
 # class, function, generator definitions #####################################
@@ -123,7 +127,7 @@ class ftrl_proximal(object):
         # now yield interactions (if applicable)
         if self.interaction:
             D = self.D
-	    #yield abs(hash(str(x[15]) + '_' + str(x[16]))) % D
+	    yield abs(hash(str(x[15]) + '_' + str(x[16]))) % D
             '''L = len(x)
 
             x = sorted(x)
@@ -278,7 +282,7 @@ learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 
 # start training
 e=0
-while True:
+while (e<epoch or epoch==0):
     loss = 0.
     count = 0
 
