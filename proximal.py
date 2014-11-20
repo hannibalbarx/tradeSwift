@@ -17,6 +17,7 @@ as the name is changed.
 
 from datetime import datetime
 from time import strftime
+import sys
 
 from csv import DictReader
 from math import exp, log, sqrt
