@@ -309,11 +309,12 @@ while (e<epoch or epoch==0):
             count += 1
 	    if not count%print_hz:
 		print('%f' % (loss/count))
+		sys.stdout.flush()
         else:
             # step 2-2, update learner with label (click) information
             learner.update(x, p, y)
     if holdafter or holdout:
-	print('\nvalidation logloss: %f when' % (loss/count)),
+	print('validation logloss: %f when' % (loss/count)),
     print('epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
     if parser.has_option('config', 'test_file'): 
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.'+str(e)+'.csv', 'w') as outfile:
