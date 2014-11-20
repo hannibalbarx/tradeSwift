@@ -308,7 +308,7 @@ while (e<epoch or epoch==0):
             loss += logloss(p, y)
             count += 1
 	    if not count%print_hz:
-		print('%f' % (loss/count)),
+		print('%f' % (loss/count))
         else:
             # step 2-2, update learner with label (click) information
             learner.update(x, p, y)
