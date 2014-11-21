@@ -22,9 +22,6 @@ from ConfigParser import SafeConfigParser
 
 parser = SafeConfigParser()
 parser.read('config.ini')
-if parser.getboolean('config', 'exit'):
-        print 'why you no love me? bye.'
-        exit()
 
 D = parser.getint('config', 'D')  # number of weights use for each model, we have 32 of them
 import bag_of_hash
@@ -36,7 +33,6 @@ import bag_of_hash
 # parameters #################################################################
 
 train = parser.get('config', 'train_file_1')
-label = parser.get('config', 'train_labels')
 
 alpha = .1   # learning rate for sgd optimization
 
@@ -61,39 +57,41 @@ print 'features count = %s'%features_count
 start = datetime.now()
 
 # a list for range(0, 33) - 13, no need to learn y14 since it is always 0
-K = [k for k in range(33) if k != 13]
+K = [k for k in range(1)]
 
 loss = 0.
 loss_y14 = log(1. - 10**-15)
+loss3 = 0.
+ID3=0
 
 print 'training...'
 ID2=0
-for ID, x, y in bag_of_hash.data(train, label, deep_hash_joins, hash_joins):
-    ID2+=1
-    for k in K:
-        p = bag_of_hash.predict(x, bag_of_hash.w[k])
-        bag_of_hash.update(alpha, bag_of_hash.w[k], bag_of_hash.n[k], x, p, y[k])
-        loss += bag_of_hash.logloss(p, y[k])  # for progressive validation
-    loss += loss_y14  # the loss of y14, logloss is never zero
+for ID, date, x, y in bag_of_hash.data(train, deep_hash_joins, hash_joins):
+    if not date=="141030":
+	    ID2+=1
+	    for k in K:
+		p = bag_of_hash.predict(x, bag_of_hash.w[k])
+		bag_of_hash.update(alpha, bag_of_hash.w[k], bag_of_hash.n[k], x, p, y[k])
+		loss += bag_of_hash.logloss(p, y[k])  # for progressive validation
+	    loss += loss_y14  # the loss of y14, logloss is never zero
 
-    # print out progress, so that we know everything is working
-    if ID % 100000 == 0:
-        print('%s\tencountered: %d\tlogloss: %f' % (
-            datetime.now(), ID2, (loss/33.)/ID2))
-
-if parser.has_option('config', 'validation_file'):
-        print 'validation...'
-        loss3 = 0.
-        ID3=0
-        for ID, x, y in bag_of_hash.data(parser.get('config', 'validation_file'), parser.get('config', 'validation_labels'), deep_hash_joins, hash_joins):
+	    # print out progress, so that we know everything is working
+	    if ID % 100000 == 0:
+		print('%s\tencountered: %d\tlogloss: %f' % (
+		    datetime.now(), ID2, (loss)/ID2))
+    else:
             ID3+=1
             for k in K:
                 p = bag_of_hash.predict(x, bag_of_hash.w[k])
                 loss3 += bag_of_hash.logloss(p, y[k])
             loss3 += loss_y14
-        if (ID3):
-                print('%s\tencountered: %d\tlogloss: %f' % (
-                    datetime.now(), ID3, (loss3/33.)/ID3))
+	    if ID3 % 100000 == 0:
+		print('validation: %s\tencountered: %d\tlogloss: %f' % (
+		    datetime.now(), ID3, (loss3)/ID3))
+
+if (ID3):
+	print('done validation\n%s\tencountered: %d\tlogloss: %f' % (
+	    datetime.now(), ID3, (loss3)/ID3))
 
 if parser.has_option('config', 'test_file'):
         print 'testing...'

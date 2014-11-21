@@ -31,8 +31,8 @@ def reset_weights():
 	global w,n
 	del w, n
 	# initialize our model, all 32 of them, again ignoring y14
-	w = [[0.] * (D) if k != 13 else None for k in range(33)]
-	n = [[0.] * (D) if k != 13 else None for k in range(33)]
+	w = [[0.] * (D) if k != 13 else None for k in range(1)]
+	n = [[0.] * (D) if k != 13 else None for k in range(1)]
 
 reset_weights()
 
@@ -46,25 +46,27 @@ reset_weights()
 #     ID: id of the instance (can also acts as instance count)
 #     x: a list of indices that its value is 1
 #     y: (if label_path is present) label value of y1 to y33
-def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
+def data(path, deep_hash_joins=None, hash_joins=None):
     for t, line in enumerate(open(path)):
         # initialize our generator
+        row = line.rstrip().split(',')
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
-	    features_count = 146
+	    features_count = len(row)-2
 	    if deep_hash_joins: features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins)#*2
 	    if hash_joins: features_count +=len(hash_joins)#*2
 	    x = [0] * (features_count)
-            if label_path:
-                label = open(label_path)
-                label.readline()  # we don't need the headers
             continue
         # parse x
-        row = line.rstrip().split(',')
         for m, feat in enumerate(row):
             if m == 0:
                 ID = int(feat)
+            elif m == 1:
+                y = [int(feat)]
+            elif m == 2:
+                x[m-2] = abs(hash(str(m-2) + '_' + feat[6:])) % D
+		date=feat[:6]
             else:
                 # one-hot encode everything with hash trick
                 # categorical: one-hotted
@@ -73,8 +75,8 @@ def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
                 # note, the build in hash(), although fast is not stable,
                 #       i.e., same value won't always have the same hash
                 #       on different machines
-		x[m] = abs(hash(str(m) + '_' + feat)) % D
-        tw = 145
+		x[m-2] = abs(hash(str(m-2) + '_' + feat)) % D
+        tw = features_count-1
 	if deep_hash_joins:			
 		for i in range(len(deep_hash_joins)):
 			for j in range(len(deep_hash_joins[i])-1):
@@ -90,11 +92,7 @@ def data(path, label_path=None, deep_hash_joins=None, hash_joins=None):
 			tw += 1
                         x[tw] = abs(hash(str(tw)+"_"+join_str)) % D
 
-        # parse y, if provided
-        if label_path:
-            # use float() to prevent future type casting, [1:] to ignore id
-            y = [float(y) for y in label.readline().split(',')[1:]]
-        yield (ID, x, y) if label_path else (ID, x)
+        yield (ID, date, x, y) #if label_path else (ID, x)
 
 # B. Bounded logloss
 # INPUT:
