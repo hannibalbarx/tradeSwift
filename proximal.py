@@ -128,7 +128,7 @@ class ftrl_proximal(object):
         # now yield interactions (if applicable)
         if self.interaction:
             D = self.D
-	    yield abs(hash(str(x[15]) + '_' + str(x[16]))) % D
+	    yield abs(hash(str(x[1]) + '_' +str(x[2]) + '_' +str(x[15]) + '_' + str(x[16]))) % D
             '''L = len(x)
 
             x = sorted(x)

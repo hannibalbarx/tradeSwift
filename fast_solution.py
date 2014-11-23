@@ -53,6 +53,8 @@ if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get
 if parser.has_option('config', 'lambada'):  print "lambada %s"% parser.getfloat('config', 'lambada') 
 print 'features count = %s'%features_count
 
+print_hz = parser.getint('config', 'print_hz') 
+
 # training and testing #######################################################
 start = datetime.now()
 
@@ -76,7 +78,7 @@ for ID, date, x, y in bag_of_hash.data(train, deep_hash_joins, hash_joins):
 	    loss += loss_y14  # the loss of y14, logloss is never zero
 
 	    # print out progress, so that we know everything is working
-	    if ID % 100000 == 0:
+	    if ID % print_hz == 0:
 		print('%s\tencountered: %d\tlogloss: %f' % (
 		    datetime.now(), ID2, (loss)/ID2))
     else:
@@ -85,7 +87,7 @@ for ID, date, x, y in bag_of_hash.data(train, deep_hash_joins, hash_joins):
                 p = bag_of_hash.predict(x, bag_of_hash.w[k])
                 loss3 += bag_of_hash.logloss(p, y[k])
             loss3 += loss_y14
-	    if ID3 % 100000 == 0:
+	    if ID3 % print_hz == 0:
 		print('validation: %s\tencountered: %d\tlogloss: %f' % (
 		    datetime.now(), ID3, (loss3)/ID3))
 
