@@ -38,7 +38,11 @@ parser.read('config.ini')
 
 # A, paths
 train = parser.get('config', 'train_file_1')
+test=validation=None
 print "train file = %s"%train
+if parser.has_option('config', 'validation_file'): 
+	validation = parser.get('config', 'validation_file')
+	print "validation file = %s"%validation
 if parser.has_option('config', 'test_file'): 
 	test = parser.get('config', 'test_file')
 	submission = parser.get('config', 'submission_file')+'.csv'  # path of to be outputted submission file
@@ -317,7 +321,17 @@ while (e<epoch or epoch==0):
     if holdafter or holdout:
 	print('validation logloss: %f when' % (loss/count)),
     print('epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
-    if parser.has_option('config', 'test_file'): 
+
+    if validation:
+	v_loss=0
+	v_count=0
+	for t, date, ID, x, y in data(validation, D):
+		p = learner.predict(x)
+		v_count+=1
+		v_loss+=logloss(p, y)
+    print('validation file logloss: %f' % (v_loss/v_count))
+    
+    if test: 
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.'+str(e)+'.csv', 'w') as outfile:
 	    outfile.write('id,click\n')
 	    for t, date, ID, x, y in data(test, D):
