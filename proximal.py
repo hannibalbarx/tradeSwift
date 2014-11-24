@@ -62,6 +62,7 @@ print "D=%d\ninteraction=%s"%(D, interaction)
 
 if interaction:
 	interaction_features = parser.get('config', 'interaction_features')
+	hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'interaction_features').split(";")))
 	print "interactions %s"%interaction_features
 
 # D, training/validation
@@ -132,7 +133,12 @@ class ftrl_proximal(object):
         # now yield interactions (if applicable)
         if self.interaction:
             D = self.D
-	    yield abs(hash(str(x[1]) + '_' +str(x[2]) + '_' +str(x[15]) + '_' + str(x[16]))) % D
+	    for i in range(len(hash_joins)):
+		join_str=""
+		for j in range(len(hash_joins[i])-1):
+			join_str+=str(hash_joins[i][j])+"_"+str(x[hash_joins[i][j]])+"_"
+		join_str+=str(hash_joins[i][-1])+"_"+str(x[hash_joins[i][-1]])
+		yield abs(hash(str(i)+"_"+str(j)+"_"+join_str)) % D
             '''L = len(x)
 
             x = sorted(x)

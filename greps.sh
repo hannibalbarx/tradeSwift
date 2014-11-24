@@ -51,3 +51,18 @@ egrep ',[01],1410(2122|3000|2723),' train>>100.valid
 
 egrep ',[01],1410(2919|2402|2822|2403|2221|2703|2803|2901|2711|2505|2920|2321|3021|2603|2120|3020|2222|2720|2322|2714|2715|2202|2801|2301|2620|3022|2710|2520|2602|2201|3002|2923|2921|2722|2401|2721|2223|2521|3001|2922|2323|2522|2121|2300|2622|2122|3000|2723|2702|3023|2400|2501),' train>>80_130.train
 egrep ',[01],1410(3003|2900|2519|2621|2601|2619|2823|2119|2100|2800),' train>>80_130.valid
+
+
+shuf data/site_train >data/r.site_train
+wc -l data/r.site_train 
+tail -5166566 data/r.site_train >data/cur.site_val
+head -20666265 data/r.site_train >data/cur.site_train
+wc -l data/cur.site*
+
+shuf data/app_train >data/r.app_train
+wc -l data/r.app_train 
+tail -2919227 data/r.app_train >data/cur.app_val
+head -11676911 data/r.app_train >data/cur.app_train
+wc -l data/cur.app*
+
+perl -ne 'print ((0 == $. % 5) ? $_ : "")'  somefile
