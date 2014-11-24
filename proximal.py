@@ -246,28 +246,30 @@ def data(path, D):
             y: y = 1 if we have a click, else we have y = 0
     '''
 
-    for t, row in enumerate(DictReader(open(path))):
+    for t, row in enumerate((open(path))):
+	row = row.split(",")
+	if row[0]=="id": continue
         # process id
-        ID = row['id']
-        del row['id']
+        ID = row[0]
+        del row[0]
 
         # process clicks
         y = 0.
-        if 'click' in row:
-            if row['click'] == '1':
+        if len(row)==23:
+            if row[0] == '1':
                 y = 1.
-            del row['click']
+            del row[0]
 
         # extract date
-        date = int(row['hour'][4:6])
+        date = int(row[0][4:6])
 
         # turn hour really into hour, it was originally YYMMDDHH
-        row['hour'] = row['hour'][6:]
+        row[0] = row[0][6:]
 
         # build x
         x = []
         for key in row:
-            value = row[key]
+            value = key
 
             # one-hot encode everything with hash trick
             index = abs(hash(key + '_' + value)) % D
@@ -329,7 +331,7 @@ while (e<epoch or epoch==0):
 		p = learner.predict(x)
 		v_count+=1
 		v_loss+=logloss(p, y)
-    print('validation file logloss: %f' % (v_loss/v_count))
+	print('validation file logloss: %f' % (v_loss/v_count))
     
     if test: 
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.'+str(e)+'.csv', 'w') as outfile:
