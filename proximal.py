@@ -63,7 +63,7 @@ print "D=%d\ninteraction=%s"%(D, interaction)
 if interaction:
 	interaction_features = parser.get('config', 'interaction_features')
 	hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'interaction_features').split(";")))
-	print "interactions %s"%interaction_features
+	print "interactions=%s"%interaction_features
 
 # D, training/validation
 holdafter = None

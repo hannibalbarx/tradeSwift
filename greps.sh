@@ -66,3 +66,4 @@ head -11676911 data/r.app_train >data/cur.app_train
 wc -l data/cur.app*
 
 perl -ne 'print ((0 == $. % 5) ? $_ : "")'  somefile
+
