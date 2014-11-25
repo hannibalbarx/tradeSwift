@@ -344,7 +344,7 @@ while (e<epoch or epoch==0):
 	    outfile.write('id,click\n')
 	    for t, date, ID, x, y in data(test, D):
 		p = learner.predict(x)
-		outfile.write('%s,%.6f\n' % (ID, p))
+		outfile.write('%s,%.8f\n' % (ID, p))
     e+=1
 
 
