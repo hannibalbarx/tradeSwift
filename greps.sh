@@ -73,3 +73,6 @@ cp appminabuddha.24Nov1601.0.csv adminabuddha.24Nov1739.csv
 tail -2858160 siteminabuddha.24Nov1546.0.csv >>adminabuddha.24Nov1739.csv 
 wc -l adminabuddha.24Nov1739.csv 
 p7zip adminabuddha.24Nov1739.csv 
+
+awk -F, '{printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24}' data/t.app_train > data/fx.t.app_train
+awk -F, '{printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24}' data/v.app_train > data/fx.v.app_train
