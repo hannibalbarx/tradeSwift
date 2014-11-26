@@ -80,8 +80,6 @@ if not epoch:
 else:
 	print "epochs=%d"%epoch
 
-print_hz = parser.getint('config', 'print_hz')
-
 ##############################################################################
 # class, function, generator definitions #####################################
 ##############################################################################
@@ -266,6 +264,7 @@ def data(path, D):
                 y = 1.
             del row[0]
 
+
         # extract date
         date = int(row[0][4:6])
 
@@ -274,11 +273,11 @@ def data(path, D):
 
         # build x
         x = []
-        for key in row:
-            value = key
+        for key in range(len(row)):
+            value = row[key]
 
             # one-hot encode everything with hash trick
-            index = abs(hash(key + '_' + value)) % D
+            index = abs(hash(str(key) + '_' + value)) % D
             x.append(index)
 
         yield t, date, ID, x, y
@@ -309,25 +308,8 @@ while (e<epoch or epoch==0):
         # step 1, get prediction from learner
         p = learner.predict(x)
 
-        if (holdafter and date > holdafter) or (holdout and t % holdout == 0):
-            # step 2-1, calculate validation loss
-            #           we do not train with the validation data so that our
-            #           validation loss is an accurate estimation
-            #
-            # holdafter: train instances from day 1 to day N
-            #            validate with instances from day N + 1 and after
-            #
-            # holdout: validate with every N instance, train with others
-            loss += logloss(p, y)
-            count += 1
-	    if not count%print_hz:
-		print('%f' % (loss/count))
-		sys.stdout.flush()
-        else:
-            # step 2-2, update learner with label (click) information
-            learner.update(x, p, y)
-    if holdafter or holdout:
-	print('validation logloss: %f when' % (loss/count)),
+        learner.update(x, p, y)
+	
     print('epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
 
     if validation:
@@ -353,4 +335,3 @@ while (e<epoch or epoch==0):
 ##############################################################################
 
 print strftime("%a %d %b %Y %H:%M:%S")+" imma bounce"
-		
