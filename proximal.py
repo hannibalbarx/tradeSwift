@@ -136,23 +136,6 @@ class ftrl_proximal(object):
         for index in x:
             yield index
 
-        # now yield interactions (if applicable)
-        if self.interaction:
-            D = self.D
-	    for i in range(len(hash_joins)):
-		join_str=""
-		for j in range(len(hash_joins[i])-1):
-			join_str+=str(hash_joins[i][j])+"_"+str(x[hash_joins[i][j]])+"_"
-		join_str+=str(hash_joins[i][-1])+"_"+str(x[hash_joins[i][-1]])
-		yield abs(hash(str(i)+"_"+str(j)+"_"+join_str)) % D
-            '''L = len(x)
-
-            x = sorted(x)
-            for i in xrange(L):
-                for j in xrange(i+1, L):
-                    # one-hot encode interactions with hash trick
-                    yield abs(hash(str(x[i]) + '_' + str(x[j]))) % D'''
-
     def predict(self, x):
         ''' Get probability estimation on x
 
@@ -287,7 +270,15 @@ def data(path, D):
 			    # one-hot encode everything with hash trick
 			    index = abs(hash(str(key) + '_' + value)) % D
 			    x.append(index)
-
+        # now yield interactions (if applicable)
+        if interaction:
+	    for i in range(len(hash_joins)):
+		join_str=""
+		for j in range(len(hash_joins[i])-1):
+			join_str+=str(hash_joins[i][j])+"_"+str(row[hash_joins[i][j]])+"_"
+		join_str+=str(hash_joins[i][-1])+"_"+str(row[hash_joins[i][-1]])
+		index = abs(hash(str(i)+"_"+str(j)+"_"+join_str)) % D
+		x.append(index)
         yield t, date, ID, x, y
 
 
