@@ -66,8 +66,12 @@ if interaction:
 	print "interactions=%s"%interaction_features
 kill=None
 if parser.has_option('config', 'kill') :
-	kill=map(int,parser.get('config', 'kill').split(";"))
+	kill=map(int,parser.get('config', 'kill').split(","))
 	print "kill = %s"%kill
+choose=None
+if parser.has_option('config', 'choose') :
+	choose=map(int,parser.get('config', 'choose').split(","))
+	print "choose = %s"%choose
 
 # D, training/validation
 holdafter = None
@@ -278,11 +282,11 @@ def data(path, D):
         # build x
         x = []
         for key in range(len(row)):
-		if not kill or key not in kill:
-		    value = row[key]
-		    # one-hot encode everything with hash trick
-		    index = abs(hash(str(key) + '_' + value)) % D
-		    x.append(index)
+		if (not kill or key not in kill) and (not choose or key in choose):
+			    value = row[key]
+			    # one-hot encode everything with hash trick
+			    index = abs(hash(str(key) + '_' + value)) % D
+			    x.append(index)
 
         yield t, date, ID, x, y
 
