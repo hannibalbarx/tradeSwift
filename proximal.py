@@ -295,10 +295,11 @@ start = datetime.now()
 learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 
 # start training
-e=0
+e=-1
 while (e<epoch or epoch==0):
     loss = 0.
     count = 0
+    e+=1
 
     for t, date, ID, x, y in data(train, D):  # data is a generator
         #    t: just a instance counter
@@ -322,8 +323,6 @@ while (e<epoch or epoch==0):
 		v_count+=1
 		v_loss+=logloss(p, y)
 	print('validation file logloss: %f' % (v_loss/v_count))
-    
-    e+=1
 
 if validation2:
 	v_loss=0
