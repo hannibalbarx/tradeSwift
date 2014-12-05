@@ -38,11 +38,14 @@ parser.read('config.ini')
 
 # A, paths
 train = parser.get('config', 'train_file_1')
-test=validation=None
+test=validation=validation2=None
 print "train file = %s"%train
 if parser.has_option('config', 'validation_file'): 
 	validation = parser.get('config', 'validation_file')
 	print "validation file = %s"%validation
+if parser.has_option('config', 'validation_file_2'): 
+	validation2 = parser.get('config', 'validation_file_2')
+	print "validation file 2 = %s"%validation2
 if parser.has_option('config', 'test_file'): 
 	test = parser.get('config', 'test_file')
 	submission = parser.get('config', 'submission_file')+'.csv'  # path of to be outputted submission file
@@ -320,14 +323,23 @@ while (e<epoch or epoch==0):
 		v_loss+=logloss(p, y)
 	print('validation file logloss: %f' % (v_loss/v_count))
     
-    if test: 
+    e+=1
+
+if validation2:
+	v_loss=0
+	v_count=0
+	for t, date, ID, x, y in data(validation2, D):
+		p = learner.predict(x)
+		v_count+=1
+		v_loss+=logloss(p, y)
+	print('validation file 2 logloss: %f' % (v_loss/v_count))
+
+if test: 
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.'+str(e)+'.csv', 'w') as outfile:
 	    outfile.write('id,click\n')
 	    for t, date, ID, x, y in data(test, D):
 		p = learner.predict(x)
 		outfile.write('%s,%.8f\n' % (ID, p))
-    e+=1
-
 
 ##############################################################################
 # start testing, and build Kaggle's submission file ##########################
