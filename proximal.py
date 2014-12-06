@@ -31,7 +31,7 @@ from math import exp, log, sqrt
 # parameters #################################################################
 ##############################################################################
 
-print strftime("%a %d %b %Y %H:%M:%S")+" wassup"
+print strftime("%a %d %b %Y %H:%M:%S ")+"wassup"
 from ConfigParser import SafeConfigParser
 parser = SafeConfigParser()
 parser.read('config.ini')
@@ -287,6 +287,8 @@ def data(path, D):
 
 start = datetime.now()
 
+v_loss=0
+v_count=0
 for validation_file_index in range(len(training_files)):
 
 	# initialize ourselves a learner
@@ -314,16 +316,14 @@ for validation_file_index in range(len(training_files)):
 
 			learner.update(x, p, y)
 			
-		print('epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
+		print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
 		e+=1
 
-	v_loss=0
-	v_count=0
 	for t, date, ID, x, y in data(working_dir+training_files[validation_file_index] , D):
 		p = learner.predict(x)
 		v_count+=1
 		v_loss+=logloss(p, y)
-	print('validation file %s logloss: %f' % (training_files[validation_file_index], v_loss/v_count))
+	print(strftime("%a %d %b %Y %H:%M:%S ")+'after validation file %s, seen = %d logloss = %f' % (training_files[validation_file_index], v_count, v_loss/v_count))
 	if not test: del learner
 
 if test: 
