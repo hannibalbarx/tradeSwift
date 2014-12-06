@@ -242,7 +242,6 @@ def data(path, D):
 
     for t, row in enumerate((open(path))):
 	row = row.split(",")
-	if len(row)<22: print row[0]
 	if row[0]=="id": continue
         # process id
         ID = row[0]
@@ -303,7 +302,6 @@ for validation_file_index in range(len(training_files)):
 
 		    if current_training_file_index == validation_file_index: continue
 		    
-		    print "file %s"%training_files[current_training_file_index]
 		    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index] , D):  # data is a generator
 			#    t: just a instance counter
 			# date: you know what this is
