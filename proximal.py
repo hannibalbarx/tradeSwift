@@ -316,14 +316,16 @@ for validation_file_index in range(len(training_files)):
 
 			learner.update(x, p, y)
 			
-		print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
+		#print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
 		e+=1
 
+	cur_v_loss=0
+	cur_v_count=0
 	for t, date, ID, x, y in data(working_dir+training_files[validation_file_index] , D):
 		p = learner.predict(x)
-		v_count+=1
-		v_loss+=logloss(p, y)
-	print(strftime("%a %d %b %Y %H:%M:%S ")+'after validation file %s, seen = %d logloss = %f' % (training_files[validation_file_index], v_count, v_loss/v_count))
+		v_count+=1; cur_v_count+=1
+		l=logloss(p, y); v_loss+=l; cur_v_loss+=l
+	print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f, %d, %6f' % (training_files[validation_file_index], cur_v_count, cur_v_loss/cur_v_count,v_count, v_loss/v_count))
 	if not test: del learner
 
 if test: 
