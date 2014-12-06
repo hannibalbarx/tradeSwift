@@ -324,6 +324,7 @@ for validation_file_index in range(len(training_files)):
 		v_count+=1
 		v_loss+=logloss(p, y)
 	print('validation file %s logloss: %f' % (training_files[validation_file_index], v_loss/v_count))
+	if (!test): del learner
 
 if test: 
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.'+str(e)+'.csv', 'w') as outfile:
