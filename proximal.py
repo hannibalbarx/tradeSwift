@@ -36,16 +36,12 @@ from ConfigParser import SafeConfigParser
 parser = SafeConfigParser()
 parser.read('config.ini')
 
-# A, paths
-train = parser.get('config', 'train_file_1')
-test=validation=validation2=None
-print "train file = %s"%train
-if parser.has_option('config', 'validation_file'): 
-	validation = parser.get('config', 'validation_file')
-	print "validation file = %s"%validation
-if parser.has_option('config', 'validation_file_2'): 
-	validation2 = parser.get('config', 'validation_file_2')
-	print "validation file 2 = %s"%validation2
+working_dir = parser.get('config', 'working_dir')
+training_files = parser.get('config', 'training_files').split(";")
+print "working dir = %s"%working_dir
+print "training files = %s"%training_files
+
+test=None
 if parser.has_option('config', 'test_file'): 
 	test = parser.get('config', 'test_file')
 	submission = parser.get('config', 'submission_file')+'.csv'  # path of to be outputted submission file
@@ -246,6 +242,7 @@ def data(path, D):
 
     for t, row in enumerate((open(path))):
 	row = row.split(",")
+	if len(row)<22: print row[0]
 	if row[0]=="id": continue
         # process id
         ID = row[0]
@@ -291,47 +288,44 @@ def data(path, D):
 
 start = datetime.now()
 
-# initialize ourselves a learner
-learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
+for validation_file_index in range(len(training_files)):
 
-# start training
-e=-1
-while (e<epoch or epoch==0):
-    loss = 0.
-    count = 0
-    e+=1
+	# initialize ourselves a learner
+	learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 
-    for t, date, ID, x, y in data(train, D):  # data is a generator
-        #    t: just a instance counter
-        # date: you know what this is
-        #   ID: id provided in original data
-        #    x: features
-        #    y: label (click)
+	# start training
+	e=0
+	while (e<epoch or epoch==0):
+		loss = 0.
+		count = 0
+	    
+		for current_training_file_index in range(len(training_files)):
 
-        # step 1, get prediction from learner
-        p = learner.predict(x)
+		    if current_training_file_index == validation_file_index: continue
+		    
+		    print "file %s"%training_files[current_training_file_index]
+		    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index] , D):  # data is a generator
+			#    t: just a instance counter
+			# date: you know what this is
+			#   ID: id provided in original data
+			#    x: features
+			#    y: label (click)
 
-        learner.update(x, p, y)
-	
-    print('epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
+			# step 1, get prediction from learner
+			p = learner.predict(x)
 
-    if validation:
+			learner.update(x, p, y)
+			
+		print('epoch %d finished, elapsed time: %s'%(e, str(datetime.now() - start)))
+		e+=1
+
 	v_loss=0
 	v_count=0
-	for t, date, ID, x, y in data(validation, D):
+	for t, date, ID, x, y in data(working_dir+training_files[validation_file_index] , D):
 		p = learner.predict(x)
 		v_count+=1
 		v_loss+=logloss(p, y)
-	print('validation file logloss: %f' % (v_loss/v_count))
-
-if validation2:
-	v_loss=0
-	v_count=0
-	for t, date, ID, x, y in data(validation2, D):
-		p = learner.predict(x)
-		v_count+=1
-		v_loss+=logloss(p, y)
-	print('validation file 2 logloss: %f' % (v_loss/v_count))
+	print('validation file %s logloss: %f' % (training_files[validation_file_index], v_loss/v_count))
 
 if test: 
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.'+str(e)+'.csv', 'w') as outfile:
