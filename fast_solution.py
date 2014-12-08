@@ -16,6 +16,7 @@ as the name is changed.
 
 
 from datetime import datetime
+from time import strftime
 from math import log, exp, sqrt
 
 from ConfigParser import SafeConfigParser
@@ -33,6 +34,10 @@ import bag_of_hash
 # parameters #################################################################
 
 train = parser.get('config', 'train_file_1')
+working_dir = parser.get('config', 'working_dir')
+training_files = parser.get('config', 'training_files').split(";")
+print "working dir = %s"%working_dir
+print "training files = %s"%training_files
 
 alpha = .1   # learning rate for sgd optimization
 
@@ -61,40 +66,37 @@ start = datetime.now()
 # a list for range(0, 33) - 13, no need to learn y14 since it is always 0
 K = [k for k in range(1)]
 
-loss = 0.
 loss_y14 = log(1. - 10**-15)
-loss3 = 0.
-ID3=0
 
-print 'training...'
-ID2=0
-for ID, date, x, y in bag_of_hash.data(train, deep_hash_joins, hash_joins):
-    if not date=="141030":
-	    ID2+=1
-	    for k in K:
-		p = bag_of_hash.predict(x, bag_of_hash.w[k])
-		bag_of_hash.update(alpha, bag_of_hash.w[k], bag_of_hash.n[k], x, p, y[k])
-		loss += bag_of_hash.logloss(p, y[k])  # for progressive validation
-	    loss += loss_y14  # the loss of y14, logloss is never zero
+v_loss=0
+v_count=0
+for validation_file_index in range(len(training_files)):
 
-	    # print out progress, so that we know everything is working
-	    if ID % print_hz == 0:
-		print('%s\tencountered: %d\tlogloss: %f' % (
-		    datetime.now(), ID2, (loss)/ID2))
-    else:
-            ID3+=1
-            for k in K:
-                p = bag_of_hash.predict(x, bag_of_hash.w[k])
-                loss3 += bag_of_hash.logloss(p, y[k])
-            loss3 += loss_y14
-	    if ID3 % print_hz == 0:
-		print('validation: %s\tencountered: %d\tlogloss: %f' % (
-		    datetime.now(), ID3, (loss3)/ID3))
+	loss = 0.
+	count = 0
+	
+	for current_training_file_index in range(len(training_files)):
 
-if (ID3):
-	print('done validation\n%s\tencountered: %d\tlogloss: %f' % (
-	    datetime.now(), ID3, (loss3)/ID3))
+		if current_training_file_index == validation_file_index: continue
 
+		for ID, date, x, y in bag_of_hash.data(working_dir+training_files[current_training_file_index], deep_hash_joins, hash_joins):
+			for k in K:
+				p = bag_of_hash.predict(x, bag_of_hash.w[k])
+				bag_of_hash.update(alpha, bag_of_hash.w[k], bag_of_hash.n[k], x, p, y[k])
+				loss += bag_of_hash.logloss(p, y[k])  # for progressive validation
+			loss += loss_y14  # the loss of y14, logloss is never zero
+	cur_v_loss=0
+	cur_v_count=0
+	for ID, date, x, y in bag_of_hash.data(working_dir+training_files[validation_file_index], deep_hash_joins, hash_joins):
+		v_count+=1; cur_v_count+=1
+		for k in K:
+			p = bag_of_hash.predict(x, bag_of_hash.w[k])
+			l=bag_of_hash.logloss(p, y[k]); v_loss+= l; cur_v_loss+= l;
+		v_loss+= loss_y14; cur_v_loss+= loss_y14  # the loss of y14, logloss is never zero
+	print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f, %d, %6f' % (training_files[validation_file_index], cur_v_count, cur_v_loss/cur_v_count,v_count, v_loss/v_count))
+	if parser.has_option('config', 'test_file'): bag_of_hash.reset_weights()
+
+'''
 if parser.has_option('config', 'test_file'):
         print 'testing...'
         with open('./sontag.csv', 'w') as outfile:
@@ -106,7 +108,6 @@ if parser.has_option('config', 'test_file'):
                     outfile.write(',%.6f' % p)
                     if k == 12:
                         outfile.write('%s_y14,0.0\n' % ID)
-'''
 if parser.has_option('config', 'test_file'):
         print 'testing...'
         with open('./sontag.csv', 'w') as outfile:

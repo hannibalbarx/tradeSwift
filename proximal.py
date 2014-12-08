@@ -304,7 +304,7 @@ for validation_file_index in range(len(training_files)):
 
 		    if current_training_file_index == validation_file_index: continue
 		    
-		    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index] , D):  # data is a generator
+		    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index], D):  # data is a generator
 			#    t: just a instance counter
 			# date: you know what this is
 			#   ID: id provided in original data
@@ -321,7 +321,7 @@ for validation_file_index in range(len(training_files)):
 
 	cur_v_loss=0
 	cur_v_count=0
-	for t, date, ID, x, y in data(working_dir+training_files[validation_file_index] , D):
+	for t, date, ID, x, y in data(working_dir+training_files[validation_file_index], D):
 		p = learner.predict(x)
 		v_count+=1; cur_v_count+=1
 		l=logloss(p, y); v_loss+=l; cur_v_loss+=l
