@@ -53,9 +53,13 @@ if parser.has_option('config', 'deep_hash_joins'):
         deep_hash_joins=list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'deep_hash_joins').split(";")))
         features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins) #*2
 
-if parser.has_option('config', 'hash_joins'):
-        hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'hash_joins').split(";")))
-        features_count +=len(hash_joins) #*2
+interaction = parser.getboolean('config', 'interaction')
+print "D=%d\ninteraction=%s"%(D, interaction)
+
+if interaction:
+	interaction_features = parser.get('config', 'interaction_features')
+	hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'interaction_features').split(";")))
+	print "interactions=%s"%interaction_features
 
 print "D= %s"%parser.get('config', 'D')
 if parser.has_option('config', 'deep_hash_joins'): print "deep_hash_joins = %s"%parser.get('config', 'deep_hash_joins')

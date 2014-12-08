@@ -78,7 +78,7 @@ def data(path, deep_hash_joins=None, hash_joins=None):
                 #       i.e., same value won't always have the same hash
                 #       on different machines
 		x[m-2] = abs(hash(str(m-2) + '_' + feat)) % D
-        tw = features_count-1
+        tw = len(row)-2-1
 	if deep_hash_joins:			
 		for i in range(len(deep_hash_joins)):
 			for j in range(len(deep_hash_joins[i])-1):
@@ -94,7 +94,7 @@ def data(path, deep_hash_joins=None, hash_joins=None):
 			tw += 1
                         x[tw] = abs(hash(str(tw)+"_"+join_str)) % D
 
-        yield (ID, date, x, y) #if label_path else (ID, x)
+        yield (ID, date, x, y)
 
 # B. Bounded logloss
 # INPUT:
