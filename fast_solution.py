@@ -33,7 +33,6 @@ import bag_of_hash
 
 # parameters #################################################################
 
-train = parser.get('config', 'train_file_1')
 working_dir = parser.get('config', 'working_dir')
 training_files = parser.get('config', 'training_files').split(";")
 print "working dir = %s"%working_dir
@@ -56,9 +55,7 @@ print "D= %s"%parser.get('config', 'D')
 if parser.has_option('config', 'deep_hash_joins'): print "deep_hash_joins = %s"%parser.get('config', 'deep_hash_joins')
 if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get('config', 'hash_joins')
 if parser.has_option('config', 'lambada'):  print "lambada %s"% parser.getfloat('config', 'lambada') 
-print 'features count = %s'%features_count
-
-print_hz = parser.getint('config', 'print_hz') 
+#print 'features count = %s'%features_count
 
 # training and testing #######################################################
 start = datetime.now()
