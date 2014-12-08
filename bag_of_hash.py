@@ -84,13 +84,13 @@ def data(path, deep_hash_joins=None, hash_joins=None):
 			for j in range(len(deep_hash_joins[i])-1):
 				for k in range(j+1, len(deep_hash_joins[i])):
 					tw += 1
-					x[tw] = abs(hash(str(tw)+"_"+row[deep_hash_joins[i][j]]+"_x_"+row[deep_hash_joins[i][k]])) % D
+					x[tw] = abs(hash(str(tw)+"_"+row[deep_hash_joins[i][j]+2]+"_x_"+row[deep_hash_joins[i][k]+2])) % D
 	if hash_joins:			
 		for i in range(len(hash_joins)):
 			join_str=""
 			for j in range(len(hash_joins[i])-1):
-				join_str+=row[hash_joins[i][j]]+"_x_"
-			join_str+=row[hash_joins[i][-1]]
+				join_str+=row[hash_joins[i][j]+2]+"_x_"
+			join_str+=row[hash_joins[i][-1]+2]
 			tw += 1
                         x[tw] = abs(hash(str(tw)+"_"+join_str)) % D
 
