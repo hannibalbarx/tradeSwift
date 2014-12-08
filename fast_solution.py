@@ -74,7 +74,8 @@ for validation_file_index in range(len(training_files)):
 	
 	for current_training_file_index in range(len(training_files)):
 
-		if current_training_file_index == validation_file_index: continue
+		if current_training_file_index == validation_file_index and len(training_files)>1:
+			continue
 
 		for ID, date, x, y in bag_of_hash.data(working_dir+training_files[current_training_file_index], deep_hash_joins, hash_joins):
 			for k in K:
@@ -82,38 +83,26 @@ for validation_file_index in range(len(training_files)):
 				bag_of_hash.update(alpha, bag_of_hash.w[k], bag_of_hash.n[k], x, p, y[k])
 				loss += bag_of_hash.logloss(p, y[k])  # for progressive validation
 			loss += loss_y14  # the loss of y14, logloss is never zero
-	cur_v_loss=0
-	cur_v_count=0
-	for ID, date, x, y in bag_of_hash.data(working_dir+training_files[validation_file_index], deep_hash_joins, hash_joins):
-		v_count+=1; cur_v_count+=1
-		for k in K:
-			p = bag_of_hash.predict(x, bag_of_hash.w[k])
-			l=bag_of_hash.logloss(p, y[k]); v_loss+= l; cur_v_loss+= l;
-		v_loss+= loss_y14; cur_v_loss+= loss_y14  # the loss of y14, logloss is never zero
-	print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f, %d, %6f' % (training_files[validation_file_index], cur_v_count, cur_v_loss/cur_v_count,v_count, v_loss/v_count))
-	if parser.has_option('config', 'test_file'): bag_of_hash.reset_weights()
+	if len(training_files)>1:
+		cur_v_loss=0
+		cur_v_count=0
+		for ID, date, x, y in bag_of_hash.data(working_dir+training_files[validation_file_index], deep_hash_joins, hash_joins):
+			v_count+=1; cur_v_count+=1
+			for k in K:
+				p = bag_of_hash.predict(x, bag_of_hash.w[k])
+				l=bag_of_hash.logloss(p, y[k]); v_loss+= l; cur_v_loss+= l;
+			v_loss+= loss_y14; cur_v_loss+= loss_y14  # the loss of y14, logloss is never zero
+		print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f, %d, %6f' % (training_files[validation_file_index], cur_v_count, cur_v_loss/cur_v_count,v_count, v_loss/v_count))
+		if not parser.has_option('config', 'test_file'): bag_of_hash.reset_weights()
 
-'''
 if parser.has_option('config', 'test_file'):
-        print 'testing...'
-        with open('./sontag.csv', 'w') as outfile:
-            outfile.write('id_label,pred\n')
-            for ID, x in bag_of_hash.data(parser.get('config', 'test_file'), deep_hash_joins=deep_hash_joins, hash_joins=hash_joins):
-		outfile.write('%s,' % ID)
+        print 'generating submission'
+        with open('./sontag'+'.'+strftime("%d%b%H%M")+'.csv', 'w') as outfile:
+	    outfile.write('id,click\n')
+            for ID, date, x, y in bag_of_hash.data(working_dir+parser.get('config', 'test_file'), deep_hash_joins, hash_joins):
                 for k in K:
                     p = bag_of_hash.predict(x, bag_of_hash.w[k])
-                    outfile.write(',%.6f' % p)
-                    if k == 12:
-                        outfile.write('%s_y14,0.0\n' % ID)
-if parser.has_option('config', 'test_file'):
-        print 'testing...'
-        with open('./sontag.csv', 'w') as outfile:
-            outfile.write('id_label,pred\n')
-            for ID, x in bag_of_hash.data(parser.get('config', 'test_file'), deep_hash_joins, hash_joins):
-                for k in K:
-                    p = bag_of_hash.predict(x, bag_of_hash.w[k])
-                    outfile.write('%s_y%d,%.6f\n' % (ID, k+1, p))
-                    if k == 12:
-                        outfile.write('%s_y14,0.0\n' % ID)
-'''
+                    outfile.write('%s,%.8f\n' % (ID, p))
+
+
 print('Done, elapsed time: %s' % str(datetime.now() - start))

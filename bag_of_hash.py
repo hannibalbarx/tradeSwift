@@ -50,6 +50,8 @@ def data(path, deep_hash_joins=None, hash_joins=None):
     for t, line in enumerate(open(path)):
         # initialize our generator
         row = line.rstrip().split(',')
+	if len(row)==23:
+		row.insert(1,'0')
         if t == 0:
             # create a static x,
             # so we don't have to construct a new x for every instance
@@ -57,7 +59,7 @@ def data(path, deep_hash_joins=None, hash_joins=None):
 	    if deep_hash_joins: features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins)#*2
 	    if hash_joins: features_count +=len(hash_joins)#*2
 	    x = [0] * (features_count)
-            continue
+            if row[0]=='id': continue
         # parse x
         for m, feat in enumerate(row):
             if m == 0:
