@@ -3,11 +3,14 @@ from sklearn.metrics import log_loss
 import numpy as np
 from time import strftime
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.ensemble import RandomForestClassifier
 
 cols=['hour', 'C1', 'banner_pos', 'site_id', 'site_domain', 'site_category', 'app_id', 'app_domain', 'app_category', 'device_model', 'device_type', 'device_conn_type', 'C14', 'C15', 'C16', 'C17', 'C18', 'C19', 'C20', 'C21', 'id']
 coltypes=dict(zip(cols,[str]*(len(cols))))
 
 print strftime("%a %d %b %Y %H:%M:%S")
+names=['id','click','hour','C1','banner_pos','site_id','site_domain','site_category','app_id','app_domain','app_category','device_id','device_ip','device_model','device_type','device_conn_type','C14','C15','C16','C17','C18','C19','C20','C21']
+train=pd.read_csv('data/by_day/21_22.site.csv',dtype=coltypes, names=names)
 train=pd.read_csv('data/site_train.3',dtype=coltypes)
 print strftime("%a %d %b %Y %H:%M:%S")
 
@@ -35,6 +38,7 @@ train=train.values()
 X_sparse = vec.fit_transform(train)
 print strftime("%a %d %b %Y %H:%M:%S")
 
+clf= RandomForestClassifier(n_jobs=7, verbose=20)
 clf = linear_model.SGDClassifier(loss='log',verbose=20, n_jobs=7)
 print strftime("%a %d %b %Y %H:%M:%S")
 clf.fit(X_sparse, y)
