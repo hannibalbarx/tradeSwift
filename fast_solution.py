@@ -38,6 +38,12 @@ training_files = parser.get('config', 'training_files').split(";")
 print "working dir = %s"%working_dir
 print "training files = %s"%training_files
 
+test=None
+if parser.has_option('config', 'test_file'): 
+	test = parser.get('config', 'test_file')
+	submission = parser.get('config', 'submission_file')+'.csv'  # path of to be outputted submission file
+	print "test file = %s\nsubmission file = %s"%(test, submission)
+
 alpha = .1   # learning rate for sgd optimization
 
 features_count = 146
@@ -93,11 +99,11 @@ for validation_file_index in range(len(training_files)):
 				l=bag_of_hash.logloss(p, y[k]); v_loss+= l; cur_v_loss+= l;
 			v_loss+= loss_y14; cur_v_loss+= loss_y14  # the loss of y14, logloss is never zero
 		print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f, %d, %6f' % (training_files[validation_file_index], cur_v_count, cur_v_loss/cur_v_count,v_count, v_loss/v_count))
-		if not parser.has_option('config', 'test_file'): bag_of_hash.reset_weights()
+		if len(training_files)-validation_file_index >1: bag_of_hash.reset_weights()
 
-if parser.has_option('config', 'test_file'):
+if test:
         print 'generating submission'
-        with open('./sontag'+'.'+strftime("%d%b%H%M")+'.csv', 'w') as outfile:
+        with open('fast_'+parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.csv', 'w') as outfile:
 	    outfile.write('id,click\n')
             for ID, date, x, y in bag_of_hash.data(working_dir+parser.get('config', 'test_file'), deep_hash_joins, hash_joins):
                 for k in K:
