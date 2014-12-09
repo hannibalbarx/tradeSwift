@@ -15,6 +15,7 @@ as the name is changed.
 '''
 
 from datetime import datetime
+from time import strftime
 from math import log, exp, sqrt
 
 from ConfigParser import SafeConfigParser
@@ -24,8 +25,29 @@ D = parser.getint('config', 'D')  # number of weights use for each model, we hav
 
 lambada = parser.getfloat('config', 'lambada')  # number of weights use for each model, we have 32 of them
 
+deep_hash_joins=[]
+hash_joins=[]
+if parser.has_option('config', 'deep_hash_joins'):
+        deep_hash_joins=list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'deep_hash_joins').split(";")))
+        features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins) #*2
+
+interaction = parser.getboolean('config', 'interaction')
+print "D=%d\ninteraction=%s"%(D, interaction)
+
+if interaction:
+	interaction_features = parser.get('config', 'interaction_features')
+	hash_joins = list(list(int(z) for z in y.split(",")) for y in list(x for x in parser.get('config', 'interaction_features').split(";")))
+	print "interactions=%s"%interaction_features
+
+if parser.has_option('config', 'deep_hash_joins'): print "deep_hash_joins = %s"%parser.get('config', 'deep_hash_joins')
+if parser.has_option('config', 'hash_joins'): print "hash_joins = %s"%parser.get('config', 'hash_joins')
+if parser.has_option('config', 'lambada'):  print "lambada %s"% parser.getfloat('config', 'lambada') 
+
 w=[]
 n=[]
+K = [k for k in range(1)]
+alpha = .1   # learning rate for sgd optimization
+loss_y14 = log(1. - 10**-15)
 
 def reset_weights():
 	global w,n
@@ -46,7 +68,7 @@ reset_weights()
 #     ID: id of the instance (can also acts as instance count)
 #     x: a list of indices that its value is 1
 #     y: (if label_path is present) label value of y1 to y33
-def data(path, deep_hash_joins=None, hash_joins=None):
+def data(path):
     for t, line in enumerate(open(path)):
         # initialize our generator
         row = line.rstrip().split(',')
@@ -95,6 +117,28 @@ def data(path, deep_hash_joins=None, hash_joins=None):
                         x[tw] = abs(hash(str(tw)+"_"+join_str)) % D
 
         yield (ID, date, x, y)
+
+def train(file, validate=False):
+	loss=0
+	count=0
+	for ID, date, x, y in data(file):
+		for k in K:
+			p = predict(x, w[k])
+			if not validate: update(alpha, w[k], n[k], x, p, y[k])
+			loss += logloss(p, y[k])  # for progressive validation
+			count+=1
+		loss += loss_y14  # the loss of y14, logloss is never zero
+	return (loss, count)
+
+def test(input_file, output_file):
+        print 'generating submission'
+        with open(output_file, 'w') as outfile:
+	    outfile.write('id,click\n')
+            for ID, date, x, y in data(input_file):
+                for k in K:
+                    p = predict(x, w[k])
+                    outfile.write('%s,%.8f\n' % (ID, p))
+	
 
 # B. Bounded logloss
 # INPUT:
