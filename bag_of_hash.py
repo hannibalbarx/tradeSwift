@@ -83,14 +83,16 @@ def data(path):
 	    x = [0] * (features_count)
             if row[0]=='id': continue
         # parse x
+	tw=0
         for m, feat in enumerate(row):
             if m == 0:
                 ID = int(feat)
             elif m == 1:
                 y = [int(feat)]
             elif m == 2:
-                x[m-2] = abs(hash(str(m-2) + '_' + feat[6:])) % D
+                x[tw] = abs(hash(str(m-2) + '_' + feat[6:])) % D
 		date=feat[:6]
+		tw += 1
             else:
                 # one-hot encode everything with hash trick
                 # categorical: one-hotted
@@ -99,22 +101,22 @@ def data(path):
                 # note, the build in hash(), although fast is not stable,
                 #       i.e., same value won't always have the same hash
                 #       on different machines
-		x[m-2] = abs(hash(str(m-2) + '_' + feat)) % D
-        tw = len(row)-2-1
+		x[tw] = abs(hash(str(m-2) + '_' + feat)) % D
+		tw += 1
 	if deep_hash_joins:			
 		for i in range(len(deep_hash_joins)):
 			for j in range(len(deep_hash_joins[i])-1):
 				for k in range(j+1, len(deep_hash_joins[i])):
-					tw += 1
 					x[tw] = abs(hash(str(tw)+"_"+row[deep_hash_joins[i][j]+2]+"_x_"+row[deep_hash_joins[i][k]+2])) % D
+					tw += 1
 	if hash_joins:			
 		for i in range(len(hash_joins)):
 			join_str=""
 			for j in range(len(hash_joins[i])-1):
 				join_str+=row[hash_joins[i][j]+2]+"_x_"
 			join_str+=row[hash_joins[i][-1]+2]
-			tw += 1
                         x[tw] = abs(hash(str(tw)+"_"+join_str)) % D
+			tw += 1
 
         yield (ID, date, x, y)
 
