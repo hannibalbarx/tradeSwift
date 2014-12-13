@@ -37,6 +37,10 @@ train=train.values()
 X_sparse = vec.fit_transform(train)
 print strftime("%a %d %b %Y %H:%M:%S")
 
+
+
+
+
 clf= RandomForestClassifier(n_jobs=7, verbose=20)
 clf = linear_model.SGDClassifier(loss='log',verbose=20, n_jobs=7)
 print strftime("%a %d %b %Y %H:%M:%S")
@@ -44,7 +48,7 @@ clf.fit(X_sparse, y)
 print strftime("%a %d %b %Y %H:%M:%S")
 
 print strftime("%a %d %b %Y %H:%M:%S")
-test=pd.read_csv('data/site_train.2',dtype=coltypes)
+test=pd.read_csv('data/site_train.2',dtype=coltypes, names=names)
 print strftime("%a %d %b %Y %H:%M:%S")
 
 y_test=test['click']

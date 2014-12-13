@@ -50,8 +50,15 @@ class FM:
         for epoch in xrange(self.num_iter):
             if self.verbose == True:
                 print "Epoch #%d" % epoch
+		print_hz=X_train.shape[0]/20
+		print_counter=0
             for idx in xrange(X_train.shape[0]):
                 self.sgd_theta_step(X_train[idx], train_labels[idx])
+		if self.verbose == True:
+			print_counter+=1
+			if print_counter==print_hz:
+				print "at %d"%idx
+				print_counter==0
                 if epoch > 0: # make no lambda steps in first iteration
                     if val_idx > (validation.shape[0]-1):
                         val_idx = 0

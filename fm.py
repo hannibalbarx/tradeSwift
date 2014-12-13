@@ -1,19 +1,95 @@
+import pandas as pd
+from sklearn.metrics import log_loss
 import numpy as np
+import sys
+from time import strftime
+from sklearn.feature_extraction import DictVectorizer
+
+sys.path.append("varx")
 from pylibfm import FM
 
-from sklearn.feature_extraction import DictVectorizer
-train = [
-    {"user": "1", "item": "5", "age": 19},
-    {"user": "2", "item": "43", "age": 33},
-    {"user": "3", "item": "20", "age": 55},
-    {"user": "4", "item": "10", "age": 20},
-]
-v = DictVectorizer()
-X = v.fit_transform(train)
-print X.toarray() 
+cols=['id', 'hour', 'C1', 'banner_pos', 'site_id', 'site_domain', 'site_category', 'app_id', 'app_domain', 'app_category', 'device_model', 'device_type', 'device_conn_type', 'C14', 'C15', 'C16', 'C17', 'C18', 'C19', 'C20', 'C21']
+coltypes=dict(zip(cols,[str]*(len(cols))))
 
-y = np.repeat(1.0,X.shape[0])
-fm = FM(learn_rate = 0.01, num_factors=10, num_iter=1,
-        param_regular=(0,0,0.1))
-fm.fit(X,y)
-fm.predict(v.transform({"user": "1", "item": "10", "age": 24}))
+print strftime("%a %d %b %Y %H:%M:%S")
+names=['id','click','hour','C1','banner_pos','site_id','site_domain','site_category','app_id','app_domain','app_category','device_id','device_ip','device_model','device_type','device_conn_type','C14','C15','C16','C17','C18','C19','C20','C21']
+train=pd.read_csv('data/site_train',dtype=coltypes, names=names)
+print strftime("%a %d %b %Y %H:%M:%S")
+
+vec = DictVectorizer()
+
+y=train['click']
+del train['id']
+del train['click']
+del train['app_id']
+del train['app_domain']
+del train['app_category']
+#del train['device_id']
+#del train['device_ip']
+
+h=train['hour']
+del train['hour']
+h2=h.apply(lambda a:a[6:])
+train['hr']=h2
+
+train=train.T
+print strftime("%a %d %b %Y %H:%M:%S")
+train=train.to_dict()
+print strftime("%a %d %b %Y %H:%M:%S")
+train=train.values()
+X_sparse = vec.fit_transform(train)
+print strftime("%a %d %b %Y %H:%M:%S")
+
+print strftime("%a %d %b %Y %H:%M:%S")
+f=open("data/fm.site_train","wb")
+for j in range(len(y)):
+	a=X_sparse.getrow(j).nonzero()
+	s=str(y[j])
+	for i in a[1]:
+		s+=" %d:1"%i
+	f.write(s+"\n")
+
+print strftime("%a %d %b %Y %H:%M:%S")
+
+names_test=['id','hour','C1','banner_pos','site_id','site_domain','site_category','app_id','app_domain','app_category','device_id','device_ip','device_model','device_type','device_conn_type','C14','C15','C16','C17','C18','C19','C20','C21']
+test=pd.read_csv('data/site_test',dtype=coltypes, names=names_test)
+print strftime("%a %d %b %Y %H:%M:%S")
+
+#y_test=test['click']
+del test['id']
+#del test['click']
+del test['app_id']
+del test['app_domain']
+del test['app_category']
+#del test['device_id']
+#del test['device_ip']
+
+h=test['hour']
+del test['hour']
+h2=h.apply(lambda a:a[6:])
+test['hr']=h2
+
+test=test.T
+print strftime("%a %d %b %Y %H:%M:%S")
+test=test.to_dict()
+test=test.values()
+print strftime("%a %d %b %Y %H:%M:%S")
+X_test_sparse = vec.transform(test)
+print strftime("%a %d %b %Y %H:%M:%S")
+
+f=open("data/fm.site_test","wb")
+for j in range(X_test_sparse.shape[0]):
+	a=X_test_sparse.getrow(j).nonzero()
+	s="0"
+	for i in a[1]:
+		s+=" %d:1"%i
+	f.write(s+"\n")
+
+print strftime("%a %d %b %Y %H:%M:%S")
+
+
+test=pd.read_csv('data/by_day/29_30.site.csv',dtype=coltypes, names=names)
+y_test=np.asarray(test['click'])
+
+yp_i_05=np.asarray(pd.read_csv("logs/MCMC_i.05_sitefeminabuddha.d8.csv", names=["p"])['p'])
+log_loss(y_test, yp_i_05, eps=1e-15)
