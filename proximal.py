@@ -276,7 +276,7 @@ def data(path, D):
 		for j in range(len(hash_joins[i])-1):
 			join_str+=str(hash_joins[i][j])+"_"+str(row[hash_joins[i][j]])+"_"
 		join_str+=str(hash_joins[i][-1])+"_"+str(row[hash_joins[i][-1]])
-		index = abs(hash(str(i)+"_"+str(j)+"_"+join_str)) % D
+		index = abs(hash(join_str)) % D
 		x.append(index)
         yield t, date, ID, x, y
 
