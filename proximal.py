@@ -290,40 +290,44 @@ start = datetime.now()
 
 if test: 
 	learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
-	for current_training_file_index in range(len(training_files)):
-	    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index], D):  # data is a generator
-		p = learner.predict(x)
-		learner.update(x, p, y)
+	e=0
+	while (e<epoch):
+		for current_training_file_index in range(len(training_files)):
+		    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index], D):  # data is a generator
+			p = learner.predict(x)
+			learner.update(x, p, y)
+		e+=1
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.0.csv', 'w') as outfile:
-	    outfile.write('id,click\n')
-	    for t, date, ID, x, y in data(working_dir+test, D):
-		p = learner.predict(x)
-		outfile.write('%s,%.8f\n' % (ID, p))
+		outfile.write('id,click\n')
+		for t, date, ID, x, y in data(working_dir+test, D):
+			p = learner.predict(x)
+			outfile.write('%s,%.8f\n' % (ID, p))
 else:
 	v_loss=0
 	v_count=0
 	for validation_file_index in range(len(training_files)):
 		learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 		e=0
-		while (e<epoch or epoch==0):
-			loss = 0.
-			count = 0
-			for current_training_file_index in range(len(training_files)):
-			    if current_training_file_index == validation_file_index and len(training_files)>1: continue
-			    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index], D):  # data is a generator
-				p = learner.predict(x)
-				learner.update(x, p, y)
-			e+=1
-
 		cur_v_loss=0
-		cur_v_count=0
-		for t, date, ID, x, y in data(working_dir+training_files[validation_file_index], D):
-			p = learner.predict(x)
-			v_count+=1; cur_v_count+=1
-			l=logloss(p, y); v_loss+=l; cur_v_loss+=l
+		cur_v_count=0		
+		while (e<epoch):
+			for current_training_file_index in range(len(training_files)):
+				 if current_training_file_index == validation_file_index and len(training_files)>1: continue
+				 for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index], D):  # data is a generator
+					p = learner.predict(x)
+					learner.update(x, p, y)
+			cur_v_loss=0
+			cur_v_count=0
+			for t, date, ID, x, y in data(working_dir+training_files[validation_file_index], D):
+				p = learner.predict(x)
+				cur_v_count+=1
+				cur_v_loss+=logloss(p, y) 
+			print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %d, %.6f' % (training_files[validation_file_index], e, cur_v_count, cur_v_loss/cur_v_count))
+			e+=1
+		v_loss+=cur_v_loss
+		v_count+=cur_v_count
 		print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f, %d, %6f' % (training_files[validation_file_index], cur_v_count, cur_v_loss/cur_v_count,v_count, v_loss/v_count))
 		del learner
-
 
 ##############################################################################
 # start testing, and build Kaggle's submission file ##########################
