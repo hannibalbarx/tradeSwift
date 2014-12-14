@@ -296,6 +296,7 @@ if test:
 		    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index], D):  # data is a generator
 			p = learner.predict(x)
 			learner.update(x, p, y)
+		print "done epoch %d"%e
 		e+=1
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.0.csv', 'w') as outfile:
 		outfile.write('id,click\n')
