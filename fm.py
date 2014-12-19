@@ -33,11 +33,7 @@ print strftime("%a %d %b %Y %H:%M:%S")
 X_test_sparse = vec.fit_transform(test)
 print strftime("%a %d %b %Y %H:%M:%S")
 
-joblib.dump(
-    vec,
-    'test_app_dictvectorizer.dump',
-    compress = 1,
-)
+joblib.dump(vec, 'test_app_dictvectorizer.dump', compress = 1,)
 
 f=open("data/fm.app_test","wb")
 for j in range(X_test_sparse.shape[0]):

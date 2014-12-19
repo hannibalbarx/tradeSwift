@@ -12,7 +12,7 @@ print strftime("%a %d %b %Y %H:%M:%S ")+"loading dictvect"
 vec=joblib.load('test_app_dictvectorizer.dump')
 
 print strftime("%a %d %b %Y %H:%M:%S ")+"loading train file"
-train=pd.read_csv('data/site_train',dtype=coltypes, names=names)
+train=pd.read_csv('data/site_train',dtype=coltypes)
 print strftime("%a %d %b %Y %H:%M:%S ")+"done"
 
 y=train['click']

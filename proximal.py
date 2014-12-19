@@ -47,6 +47,11 @@ if parser.has_option('config', 'test_file'):
 	submission = parser.get('config', 'submission_file')+'.csv'  # path of to be outputted submission file
 	print "test file = %s\nsubmission file = %s"%(test, submission)
 
+cv_out=None
+if parser.has_option('config', 'cv_out_file'): 
+	cv_out = parser.get('config', 'cv_out_file')
+	print "cv out file = %s"%(cv_out)
+
 # B, model
 alpha = parser.getfloat('config', 'alpha')  # learning rate
 beta = parser.getfloat('config', 'beta')   # smoothing parameter for adaptive learning rate
@@ -299,7 +304,7 @@ if test:
 			learner.update(x, p, y)
 		print strftime("%a %d %b %Y %H:%M:%S ")+"done epoch %d"%e
 		e+=1
-	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.0.csv', 'w') as outfile:
+	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.csv', 'w') as outfile:
 		outfile.write('id,click\n')
 		for t, date, ID, x, y in data(working_dir+test, D):
 			p = learner.predict(x)
@@ -307,6 +312,9 @@ if test:
 else:
 	v_loss=0
 	v_count=0
+	if cv_out:
+		cv_out_file = open(cv_out+'.'+strftime("%d%b%H%M")+'.csv', 'w')
+		cv_out_file.write('id,click\n')
 	for validation_file_index in range(len(training_files)):
 		learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 		e=0
@@ -324,6 +332,8 @@ else:
 				p = learner.predict(x)
 				cur_v_count+=1
 				cur_v_loss+=logloss(p, y) 
+				if e>=epoch-1 and cv_out:
+					cv_out_file.write('%s,%.8f\n' % (ID, p))					
 			print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %d, %.6f' % (training_files[validation_file_index], e, cur_v_count, cur_v_loss/cur_v_count))
 			e+=1
 		v_loss+=cur_v_loss
