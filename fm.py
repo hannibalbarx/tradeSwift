@@ -22,7 +22,7 @@ del test['site_id']
 del test['site_domain']
 del test['site_category']
 
-vec = DictVectorizer()
+vec = joblib.load('train_app_dictvectorizer.dump')
 
 print strftime("%a %d %b %Y %H:%M:%S")
 test=test.T
@@ -30,10 +30,8 @@ print strftime("%a %d %b %Y %H:%M:%S")
 test=test.to_dict()
 test=test.values()
 print strftime("%a %d %b %Y %H:%M:%S")
-X_test_sparse = vec.fit_transform(test)
+X_test_sparse = vec.transform(test)
 print strftime("%a %d %b %Y %H:%M:%S")
-
-joblib.dump(vec, 'test_app_dictvectorizer.dump', compress = 1,)
 
 f=open("data/fm.app_test","wb")
 for j in range(X_test_sparse.shape[0]):
@@ -56,11 +54,18 @@ print strftime("%a %d %b %Y %H:%M:%S")
 
 
 
+import pandas as pd
+import numpy as np
+import sys
+from time import strftime
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.externals import joblib
 
+cols=['id', 'hour', 'C1', 'banner_pos', 'site_id', 'site_domain', 'site_category', 'app_id', 'app_domain', 'app_category', 'device_model', 'device_type', 'device_conn_type', 'C14', 'C15', 'C16', 'C17', 'C18', 'C19', 'C20', 'C21']
+coltypes=dict(zip(cols,[str]*(len(cols))))
 
 print strftime("%a %d %b %Y %H:%M:%S")
-names=['id','click','hour','C1','banner_pos','site_id','site_domain','site_category','app_id','app_domain','app_category','device_id','device_ip','device_model','device_type','device_conn_type','C14','C15','C16','C17','C18','C19','C20','C21']
-train=pd.read_csv('data/site_train',dtype=coltypes, names=names)
+train=pd.read_csv('data/app_train',dtype=coltypes)
 print strftime("%a %d %b %Y %H:%M:%S")
 
 vec = DictVectorizer()
@@ -85,8 +90,10 @@ print strftime("%a %d %b %Y %H:%M:%S")
 train=train.to_dict()
 print strftime("%a %d %b %Y %H:%M:%S")
 train=train.values()
-X_sparse = vec.transform(train)
+X_sparse = vec.fit_transform(train)
 print strftime("%a %d %b %Y %H:%M:%S")
+
+joblib.dump(vec, 'train_app_dictvectorizer.dump', compress = 1,)
 
 print strftime("%a %d %b %Y %H:%M:%S")
 f=open("data/fm.app_train","wb")
