@@ -1,4 +1,4 @@
-cat 23_24.vwapp  25_26.vwapp  27_28.vwapp  29_30.vwapp|vw --loss_function logistic --link=logistic -f 1.model
+cat 23_24.vwapp  25_26.vwapp  27_28.vwapp  29_30.vwapp|vw --passes 3 --loss_function logistic --link=logistic -f 1.model
 vw -i 1.model -t 21_22.vwapp -p 21_22.out --loss_function logistic
 cat 21_22.vwapp  25_26.vwapp  27_28.vwapp  29_30.vwapp|vw --passes 3 --loss_function logistic --link=logistic -f 23_24.model
 vw -i 23_24.model -t 23_24.vwapp  -p 23_24.out --loss_function logistic
