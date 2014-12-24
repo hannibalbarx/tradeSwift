@@ -123,8 +123,7 @@ class ftrl_proximal(object):
         # z: weights
         # w: lazy weights
         self.n = [0.] * D
-        #self.z = [0.] * D
-        self.z = [1.1441479] * D
+        self.z = [0.] * D
         self.w = {}
 
     def _indices(self, x):
