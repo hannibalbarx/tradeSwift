@@ -37,20 +37,18 @@ parser = SafeConfigParser()
 parser.read('config.ini')
 
 working_dir = parser.get('config', 'working_dir')
-training_files = parser.get('config', 'training_files').split(";")
+train = parser.get('config', 'train')
 print "working dir = %s"%working_dir
-print "training files = %s"%training_files
-
+print "training files = %s"%train
+validate=None
+if parser.has_option('config', 'validate'): 
+	validate= parser.get('config', 'validate')
+	print "validate file = %s"%(validate)
 test=None
-if parser.has_option('config', 'test_file'): 
-	test = parser.get('config', 'test_file')
+if parser.has_option('config', 'test'): 
+	test = parser.get('config', 'test')
 	submission = parser.get('config', 'submission_file')+'.csv'  # path of to be outputted submission file
 	print "test file = %s\nsubmission file = %s"%(test, submission)
-
-cv_out=None
-if parser.has_option('config', 'cv_out_file'): 
-	cv_out = parser.get('config', 'cv_out_file')
-	print "cv out file = %s"%(cv_out)
 
 # B, model
 alpha = parser.getfloat('config', 'alpha')  # learning rate
@@ -292,53 +290,30 @@ def data(path, D):
 
 start = datetime.now()
 
+learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
+e=0
+while (e<epoch):
+	for t, date, ID, x, y in data(working_dir+train, D):  # data is a generator
+		p = learner.predict(x)
+		learner.update(x, p, y)
+	print strftime("%a %d %b %Y %H:%M:%S ")+"done epoch %d"%e
+	e+=1
+
+if validate: 
+	cur_v_loss=0
+	cur_v_count=0
+	for t, date, ID, x, y in data(working_dir+validate, D):
+		p = learner.predict(x)
+		cur_v_count+=1
+		cur_v_loss+=logloss(p, y) 
+	print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f' % (validate, cur_v_count, cur_v_loss/cur_v_count))
 
 if test: 
-	learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
-	e=0
-	while (e<epoch):
-		for current_training_file_index in range(len(training_files)):
-		    for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index], D):  # data is a generator
-			p = learner.predict(x)
-			learner.update(x, p, y)
-		print strftime("%a %d %b %Y %H:%M:%S ")+"done epoch %d"%e
-		e+=1
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.csv', 'w') as outfile:
 		outfile.write('id,click\n')
 		for t, date, ID, x, y in data(working_dir+test, D):
 			p = learner.predict(x)
 			outfile.write('%s,%.8f\n' % (ID, p))
-else:
-	v_loss=0
-	v_count=0
-	if cv_out:
-		cv_out_file = open(cv_out+'.'+strftime("%d%b%H%M")+'.csv', 'w')
-		cv_out_file.write('id,click\n')
-	for validation_file_index in range(len(training_files)):
-		learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
-		e=0
-		cur_v_loss=0
-		cur_v_count=0		
-		while (e<epoch):
-			for current_training_file_index in range(len(training_files)):
-				 if current_training_file_index == validation_file_index and len(training_files)>1: continue
-				 for t, date, ID, x, y in data(working_dir+training_files[current_training_file_index], D):  # data is a generator
-					p = learner.predict(x)
-					learner.update(x, p, y)
-			cur_v_loss=0
-			cur_v_count=0
-			for t, date, ID, x, y in data(working_dir+training_files[validation_file_index], D):
-				p = learner.predict(x)
-				cur_v_count+=1
-				cur_v_loss+=logloss(p, y) 
-				if e>=epoch-1 and cv_out:
-					cv_out_file.write('%s,%.8f\n' % (ID, p))					
-			print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %d, %.6f' % (training_files[validation_file_index], e, cur_v_count, cur_v_loss/cur_v_count))
-			e+=1
-		v_loss+=cur_v_loss
-		v_count+=cur_v_count
-		print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f, %d, %6f' % (training_files[validation_file_index], cur_v_count, cur_v_loss/cur_v_count,v_count, v_loss/v_count))
-		del learner
 
 ##############################################################################
 # start testing, and build Kaggle's submission file ##########################
