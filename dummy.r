@@ -1,10 +1,11 @@
-test.file="p10.t.site_train.2"
-train.file="p10.t.site_train.1"
-out.file="p10.t.site_train.1.dummy50"
-threshold=50
+test.file="p10.t.site_train.1"
+train.file="p10.t.site_train.2"
+out.file="p10.t.site_train.2.dummy100"
+threshold=100
+test.cols=c('id','click','hour','C1','banner_pos','site_id','site_domain','site_category','app_id','app_domain','app_category','device_id','device_ip','device_model','device_type','device_conn_type','C14','C15','C16','C17','C18','C19','C20','C21')
 
 cols=c('id','click','hour','C1','banner_pos','site_id','site_domain','site_category','app_id','app_domain','app_category','device_id','device_ip','device_model','device_type','device_conn_type','C14','C15','C16','C17','C18','C19','C20','C21')
-test=read.csv(test.file,sep=",",col.names=cols,colClasses="factor")
+test=read.csv(test.file,sep=",",col.names=test.cols,colClasses="factor")
 test$click<-as.integer(test$click)-1
 test.di=aggregate(test$click,list(test$device_ip),length)
 test.di<-test.di[order(test.di$x,decreasing = TRUE),]

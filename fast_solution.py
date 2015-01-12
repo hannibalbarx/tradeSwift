@@ -34,37 +34,27 @@ import bag_of_hash
 # parameters #################################################################
 
 working_dir = parser.get('config', 'working_dir')
-training_files = parser.get('config', 'training_files').split(";")
+train = parser.get('config', 'train')
 print "working dir = %s"%working_dir
-print "training files = %s"%training_files
-
+print "training files = %s"%train
+validate=None
+if parser.has_option('config', 'validate'): 
+	validate= parser.get('config', 'validate')
+	print "validate file = %s"%(validate)
 test=None
-if parser.has_option('config', 'test_file'): 
-	test = parser.get('config', 'test_file')
+if parser.has_option('config', 'test'): 
+	test = parser.get('config', 'test')
 	submission = parser.get('config', 'submission_file')+'.csv'  # path of to be outputted submission file
 	print "test file = %s\nsubmission file = %s"%(test, submission)
 
 # training and testing #######################################################
 start = datetime.now()
 
+bag_of_hash.train(working_dir+train)
+if validate: 
+	(cur_v_loss, cur_v_count) = bag_of_hash.train(working_dir+validate, validate=True)
+	print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f' % (validate, cur_v_count, cur_v_loss/cur_v_count))
 if test:
-	for current_training_file_index in range(len(training_files)):
-		bag_of_hash.train(working_dir+training_files[current_training_file_index])
-	bag_of_hash.test(working_dir+parser.get('config', 'test_file'), 'fast_'+parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.csv')
-else:	
-	file_count=len(training_files)
-	if file_count<2:
-		print "too few files for cv fold"
-		exit()
-	v_loss=0
-	v_count=0
-	for validation_file_index in range(len(training_files)):
-		for current_training_file_index in range(len(training_files)):
-			if current_training_file_index == validation_file_index and len(training_files)>1: continue
-			bag_of_hash.train(working_dir+training_files[current_training_file_index])
-		(cur_v_loss, cur_v_count) = bag_of_hash.train(working_dir+training_files[validation_file_index], validate=True)
-		v_loss+= cur_v_loss; v_count+=cur_v_count
-		print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f, %d, %6f' % (training_files[validation_file_index], cur_v_count, cur_v_loss/cur_v_count,v_count, v_loss/v_count))
-		if len(training_files)-validation_file_index >1: bag_of_hash.reset_weights()
+	bag_of_hash.test(working_dir+test)
 
 print('Done, elapsed time: %s' % str(datetime.now() - start))
