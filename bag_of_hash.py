@@ -81,7 +81,7 @@ def data(path):
 	    if deep_hash_joins: features_count +=sum(len(x)*(len(x)-1)/2 for x in deep_hash_joins)#*2
 	    if hash_joins: features_count +=len(hash_joins)#*2
 	    x = [0] * (features_count)
-            if row[0]=='id': continue
+	if row[0]=='id': continue
         # parse x
 	tw=0
         for m, feat in enumerate(row):
