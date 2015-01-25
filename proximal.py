@@ -272,6 +272,9 @@ def data(path, D):
 			    # one-hot encode everything with hash trick
 			    index = abs(hash(str(key) + '_' + value)) % D
 			    x.append(index)
+	#day of the week
+	index = abs(hash(str(len(row)) + '_' + str(date%7))) % D
+	x.append(index)
         # now yield interactions (if applicable)
         if interaction:
 	    for i in range(len(hash_joins)):
