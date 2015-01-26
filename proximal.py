@@ -302,16 +302,16 @@ while (e<epoch):
 		cur_v_count+=1
 		cur_v_loss+=logloss(p, y) 
 	print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count))
+	if validate: 
+		cur_v_loss=0
+		cur_v_count=0
+		for t, date, ID, x, y in data(working_dir+validate, D):
+			p = learner.predict(x)
+			cur_v_count+=1
+			cur_v_loss+=logloss(p, y) 
+		print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f' % (validate, cur_v_count, cur_v_loss/cur_v_count))
 	e+=1
 
-if validate: 
-	cur_v_loss=0
-	cur_v_count=0
-	for t, date, ID, x, y in data(working_dir+validate, D):
-		p = learner.predict(x)
-		cur_v_count+=1
-		cur_v_loss+=logloss(p, y) 
-	print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f' % (validate, cur_v_count, cur_v_loss/cur_v_count))
 
 if test: 
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.csv', 'w') as outfile:
