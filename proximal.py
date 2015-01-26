@@ -272,9 +272,7 @@ def data(path, D):
 			    # one-hot encode everything with hash trick
 			    index = abs(hash(str(key) + '_' + value)) % D
 			    x.append(index)
-	#day of the week
-	index = abs(hash(str(len(row)) + '_' + str(date%7))) % D
-	x.append(index)
+
         # now yield interactions (if applicable)
         if interaction:
 	    for i in range(len(hash_joins)):
@@ -296,10 +294,14 @@ start = datetime.now()
 learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 e=0
 while (e<epoch):
+	cur_v_loss=0
+	cur_v_count=0
 	for t, date, ID, x, y in data(working_dir+train, D):  # data is a generator
 		p = learner.predict(x)
 		learner.update(x, p, y)
-	print strftime("%a %d %b %Y %H:%M:%S ")+"done epoch %d"%e
+		cur_v_count+=1
+		cur_v_loss+=logloss(p, y) 
+	print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count))
 	e+=1
 
 if validate: 
