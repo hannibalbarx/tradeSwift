@@ -289,11 +289,13 @@ def data(path, D):
 
 start = datetime.now()
 
-for c in [None]+list([i] for i in range(22)):
+chosen=[6]
+for c in range(22):
+	if c in chosen: continue
 	learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
 	e=0
-	choose=c
-	print c,
+	choose=chosen+[c]
+	print choose,
 	while (e<epoch):
 		cur_v_loss=0
 		cur_v_count=0
