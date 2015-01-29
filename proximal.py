@@ -289,32 +289,34 @@ def data(path, D):
 
 start = datetime.now()
 
-chosen=[6]
-for c in range(22):
-	if c in chosen: continue
-	learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
-	e=0
-	choose=chosen+[c]
-	print choose,
-	while (e<epoch):
-		cur_v_loss=0
-		cur_v_count=0
-		for t, date, ID, x, y in data(working_dir+train, D):  # data is a generator
-			p = learner.predict(x)
-			learner.update(x, p, y)
-			cur_v_count+=1
-			cur_v_loss+=logloss(p, y) 
-		#print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count))
-		for v in validate:
+chosen=[]
+for c1 in range(22):
+	for c2 in range(c1+1,22):
+		if c1 in [3,4,5] or c2 in [3,4,5] : continue
+		if [c1,c2] in chosen: continue
+		learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
+		e=0
+		hash_joins=chosen+[[c1,c2]]
+		print hash_joins,
+		while (e<epoch):
 			cur_v_loss=0
 			cur_v_count=0
-			for t, date, ID, x, y in data(working_dir+v, D):
+			for t, date, ID, x, y in data(working_dir+train, D):  # data is a generator
 				p = learner.predict(x)
+				learner.update(x, p, y)
 				cur_v_count+=1
 				cur_v_loss+=logloss(p, y) 
-			print('%.6f' % (cur_v_loss/cur_v_count)),
-		print ""
-		e+=1
+			#print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count))
+			for v in validate:
+				cur_v_loss=0
+				cur_v_count=0
+				for t, date, ID, x, y in data(working_dir+v, D):
+					p = learner.predict(x)
+					cur_v_count+=1
+					cur_v_loss+=logloss(p, y) 
+				print('%.6f' % (cur_v_loss/cur_v_count)),
+			print ""
+			e+=1
 
 
 if test: 
