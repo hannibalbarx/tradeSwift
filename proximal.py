@@ -42,8 +42,8 @@ print "working dir = %s"%working_dir
 print "training files = %s"%train
 validate=None
 if parser.has_option('config', 'validate'): 
-	validate= parser.get('config', 'validate')
-	print "validate file = %s"%(validate)
+	validate= parser.get('config', 'validate').split(',')
+	print "validate files = %s"%(validate)
 test=None
 if parser.has_option('config', 'test'): 
 	test = parser.get('config', 'test')
@@ -302,14 +302,15 @@ while (e<epoch):
 		cur_v_count+=1
 		cur_v_loss+=logloss(p, y) 
 	print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count))
-	if validate: 
-		cur_v_loss=0
-		cur_v_count=0
-		for t, date, ID, x, y in data(working_dir+validate, D):
-			p = learner.predict(x)
-			cur_v_count+=1
-			cur_v_loss+=logloss(p, y) 
-		print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f' % (validate, cur_v_count, cur_v_loss/cur_v_count))
+	if validate:
+		for v in validate: 
+			cur_v_loss=0
+			cur_v_count=0
+			for t, date, ID, x, y in data(working_dir+v, D):
+				p = learner.predict(x)
+				cur_v_count+=1
+				cur_v_loss+=logloss(p, y) 
+			print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f' % (v, cur_v_count, cur_v_loss/cur_v_count))
 	e+=1
 
 
