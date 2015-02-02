@@ -293,7 +293,7 @@ def data(path, D):
 start = datetime.now()
 
 chosen=[]
-for c1 in range(22):
+for c1 in range(21):
 	for c2 in range(c1+1,22):
 		if c1 in [3,4,5] or c2 in [3,4,5] : continue
 		if [c1,c2] in chosen: continue
