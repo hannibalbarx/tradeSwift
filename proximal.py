@@ -37,11 +37,14 @@ parser = SafeConfigParser()
 parser.read('config.ini')
 
 working_dir = parser.get('config', 'working_dir')
-train = parser.get('config', 'train')
+train = parser.get('config', 'train').split(',')
 print "working dir = %s"%working_dir
 print "training files = %s"%train
-validate=[parser.get('config', 'validate'), parser.get('config', 'validate2'), parser.get('config', 'validate3')]
-print "validate files = %s"%(validate)
+validate=None
+if parser.has_option('config', 'validate'): 
+	validate= parser.get('config', 'validate').split(',')
+	print "validate files = %s"%(validate)
+
 test=None
 if parser.has_option('config', 'test'): 
 	test = parser.get('config', 'test')
@@ -301,22 +304,24 @@ for c1 in range(22):
 		while (e<epoch):
 			cur_v_loss=0
 			cur_v_count=0
-			for t, date, ID, x, y in data(working_dir+train, D):  # data is a generator
-				p = learner.predict(x)
-				learner.update(x, p, y)
-				cur_v_count+=1
-				cur_v_loss+=logloss(p, y) 
-			#print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count))
-			for v in validate:
-				cur_v_loss=0
-				cur_v_count=0
-				for t, date, ID, x, y in data(working_dir+v, D):
+			for tr in train:
+				for t, date, ID, x, y in data(working_dir+tr, D):  # data is a generator
 					p = learner.predict(x)
+					learner.update(x, p, y)
 					cur_v_count+=1
 					cur_v_loss+=logloss(p, y) 
-				print('%.6f' % (cur_v_loss/cur_v_count)),
-			print ""
+			#print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count))
 			e+=1
+		print(strftime("%a %d %b %Y %H:%M:%S ")),
+		for v in validate:
+			cur_v_loss=0
+			cur_v_count=0
+			for t, date, ID, x, y in data(working_dir+v, D):
+				p = learner.predict(x)
+				cur_v_count+=1
+				cur_v_loss+=logloss(p, y) 
+			print('%.6f' % (cur_v_loss/cur_v_count)),
+		print ""
 
 
 if test: 
