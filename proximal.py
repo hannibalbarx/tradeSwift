@@ -291,36 +291,53 @@ def data(path, D):
 
 start = datetime.now()
 
-learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
-e=0
-while (e<epoch):
-	cur_v_loss=0
-	cur_v_count=0
-	for tr in train:
-		for t, date, ID, x, y in data(working_dir+tr, D):  # data is a generator
-			p = learner.predict(x)
-			learner.update(x, p, y)
-			cur_v_count+=1
-			cur_v_loss+=logloss(p, y) 
-	print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count))
-	if validate:
-		for v in validate: 
-			cur_v_loss=0
-			cur_v_count=0
-			for t, date, ID, x, y in data(working_dir+v, D):
+if test: 
+	learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
+	e=0
+	while (e<epoch):
+		cur_v_loss=0
+		cur_v_count=0
+		for tr in train:
+			for t, date, ID, x, y in data(working_dir+tr, D):  # data is a generator
 				p = learner.predict(x)
+				learner.update(x, p, y)
 				cur_v_count+=1
 				cur_v_loss+=logloss(p, y) 
-			print(strftime("%a %d %b %Y %H:%M:%S ")+'%s, %d, %.6f' % (v, cur_v_count, cur_v_loss/cur_v_count))
-	e+=1
-
-
-if test: 
+		print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count)),
+		e+=1
+		learner.alpha=.85*learner.alpha
 	with open(parser.get('config', 'submission_file')+'.'+strftime("%d%b%H%M")+'.csv', 'w') as outfile:
 		outfile.write('id,click\n')
 		for t, date, ID, x, y in data(working_dir+test, D):
 			p = learner.predict(x)
 			outfile.write('%s,%.8f\n' % (ID, p))
+	sys.exit()
+	
+for v in validate: 
+	learner = ftrl_proximal(alpha, beta, L1, L2, D, interaction)
+	e=0
+	while (e<epoch):
+		cur_v_loss=0
+		cur_v_count=0
+		for tr in train:
+			if tr==v: continue
+			for t, date, ID, x, y in data(working_dir+tr, D):  # data is a generator
+				p = learner.predict(x)
+				learner.update(x, p, y)
+				cur_v_count+=1
+				cur_v_loss+=logloss(p, y) 
+		print(strftime("%a %d %b %Y %H:%M:%S ")+'epoch %d, %d, %.6f' % (e, cur_v_count, cur_v_loss/cur_v_count)),
+		cur_v_loss=0
+		cur_v_count=0
+		for t, date, ID, x, y in data(working_dir+v, D):
+			p = learner.predict(x)
+			cur_v_count+=1
+			cur_v_loss+=logloss(p, y) 
+		print(', %s, %d, %.6f' % (v, cur_v_count, cur_v_loss/cur_v_count)),
+		print "\n"
+		e+=1
+		learner.alpha=.85*learner.alpha
+
 
 ##############################################################################
 # start testing, and build Kaggle's submission file ##########################
