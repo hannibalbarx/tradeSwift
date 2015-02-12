@@ -333,8 +333,7 @@ for v in validate:
 			p = learner.predict(x)
 			cur_v_count+=1
 			cur_v_loss+=logloss(p, y) 
-		print(', %s, %d, %.6f' % (v, cur_v_count, cur_v_loss/cur_v_count)),
-		print "\n"
+		print(', %s, %d, %.6f' % (v, cur_v_count, cur_v_loss/cur_v_count))
 		e+=1
 		learner.alpha=.85*learner.alpha
 
